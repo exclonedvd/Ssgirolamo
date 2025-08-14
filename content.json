@@ -1,0 +1,81 @@
+{
+  "images": {
+    "rooms": [
+      {
+        "src": "media/camere/camere-001.webp?v=rotfix",
+        "label": "Camera 01"
+      },
+      {
+        "src": "media/camere/camere-002.webp?v=rotfix",
+        "label": "Camera 02"
+      },
+      {
+        "src": "media/camere/camere-003.webp?v=rotfix",
+        "label": "Camera 03"
+      },
+      {
+        "src": "media/camere/camere-004.webp?v=rotfix",
+        "label": "Camera 04"
+      },
+      {
+        "src": "media/camere/camere-005.webp?v=rotfix",
+        "label": "Camera 05"
+      },
+      {
+        "src": "media/camere/camere-006.webp?v=rotfix",
+        "label": "Camera 06"
+      },
+      {
+        "src": "media/camere/camere-007.webp?v=rotfix",
+        "label": "Camera 07"
+      },
+      {
+        "src": "media/camere/camere-008.webp?v=rotfix",
+        "label": "Camera 08"
+      },
+      {
+        "src": "media/camere/camere-009.webp?v=rotfix",
+        "label": "Camera 09"
+      },
+      {
+        "src": "media/camere/camere-010.webp?v=rotfix",
+        "label": "Camera 10"
+      }
+    ],
+    "exteriors": [
+      {
+        "src": "media/esterni/esterni-001.webp?v=rotfix",
+        "label": "Esterni 01"
+      }
+    ],
+    "breakfast": [
+      {
+        "src": "media/colazione/colazione-001.webp?v=rotfix",
+        "label": "Colazione 01"
+      },
+      {
+        "src": "media/colazione/colazione-002.webp?v=rotfix",
+        "label": "Colazione 02"
+      },
+      {
+        "src": "media/colazione/colazione-003.webp?v=rotfix",
+        "label": "Colazione 03"
+      }
+    ],
+    "gallery": [
+      {
+        "src": "media/galleria/galleria-001.webp?v=rotfix",
+        "label": "Galleria 01"
+      },
+      {
+        "src": "media/galleria/galleria-002.webp?v=rotfix",
+        "label": "Galleria 02"
+      },
+      {
+        "src": "media/galleria/galleria-003.webp?v=rotfix",
+        "label": "Galleria 03"
+      }
+    ]
+  },
+  "hero": "media/esterni/esterni-001.webp?v=rotfix"
+}
