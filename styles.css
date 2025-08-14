@@ -113,3 +113,16 @@ form{display:grid; gap:12px}
 .success{padding:12px; border-radius:10px; background:#eaf7ee; color:#1a5b2a; display:none}
 .error{padding:12px; border-radius:10px; background:#fdeceb; color:#8a1f1f; display:none}
 small.hint{opacity:.8}
+
+/* WhatsApp floating button */
+.wa-fab{
+  position:fixed; right:16px; bottom:80px; z-index:1500;
+  display:inline-flex; align-items:center; gap:8px;
+  background:#25D366; color:#fff; text-decoration:none; font-weight:700;
+  padding:12px 14px; border-radius:999px; box-shadow:0 10px 24px rgba(0,0,0,.2);
+}
+.wa-fab svg{display:block}
+@media (max-width: 520px){
+  .wa-fab span{display:none}
+  .wa-fab{border-radius:50%; width:52px; height:52px; justify-content:center; padding:0}
+}
