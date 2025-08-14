@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agriturismo Corte San Girolamo</title>
+  <meta name="theme-color" content="#5b4636" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <style>
+    :root { --bg:#f6f4f1; --text:#222; --muted:#6b6b6b; --card:#fff; --border:#e5e5e5; --radius:16px; }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{max-width:1100px;margin:0 auto;padding:0 16px}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .nav .left{display:flex;align-items:center;gap:12px;font-weight:600}
+    .nav .links{display:flex;gap:18px;font-size:14px}
+    .hero{position:relative;height:min(70vh,700px);color:#fff;display:flex;align-items:center;background-size:cover;background-position:center}
+    .hero::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35))}
+    .hero .inner{position:relative;z-index:1}
+    .hero h1{margin:0 0 8px;font-size:clamp(28px,4vw,44px)}
+    .hero p{margin:0 0 14px;opacity:.95}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:14px;border:1px solid #000;background:#000;color:#fff}
+    .btn.ghost{background:transparent;color:#fff;border-color:#fff;margin-left:8px}
+    section{padding:40px 0}
+    h2{margin:0 0 14px;font-size:clamp(22px,2.6vw,30px)}
+    .grid{display:grid;gap:16px}
+    .grid-3{grid-template-columns:repeat(3,1fr)} @media(max-width:900px){.grid-3{grid-template-columns:repeat(2,1fr)}} @media(max-width:560px){.grid-3{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .card .img{height:220px;object-fit:cover;width:100%}
+    .card .body{padding:14px}
+    .muted{color:var(--muted)}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .tab{padding:8px 12px;border-radius:12px;border:1px solid var(--border);background:#fff}
+    .tab.active{background:#000;color:#fff;border-color:#000}
+    .gallery{display:grid;gap:10px;grid-template-columns:repeat(3,1fr)} @media(max-width:900px){.gallery{grid-template-columns:repeat(2,1fr)}} @media(max-width:560px){.gallery{grid-template-columns:1fr}}
+    .gallery img{height:220px;object-fit:cover;border-radius:12px;width:100%}
+    footer{border-top:1px solid var(--border);margin-top:24px}
+    .footer-top{display:grid;gap:24px;grid-template-columns:repeat(3,1fr);padding:24px 0} @media(max-width:900px){.footer-top{grid-template-columns:1fr}}
+    .sticky{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);border-top:1px solid var(--border)}
+    .sticky .bar{height:64px;display:flex;gap:10px;align-items:center}
+    .sticky a{flex:1;display:flex;align-items:center;justify-content:center;height:44px;border-radius:12px;border:1px solid var(--border);background:#fff}
+    .sticky a.primary{background:#000;color:#fff;border-color:#000}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a href="#" class="left"><img src="logo.jpg" alt="logo" width="32" height="32" style="border-radius:12px"><span id="brand">Corte San Girolamo</span></a>
+      <nav class="links">
+        <a href="#rooms">Camere</a><a href="#restaurant">Ristoro & Colazione</a><a href="#experiences">Esperienze</a><a href="#gallery">Galleria</a><a href="#map">Mappa</a><a href="#contact">Contatti</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="hero" id="hero">
+    <div class="container inner">
+      <h1 id="title">Agriturismo Corte San Girolamo</h1>
+      <p id="subtitle">B&B nel Parco del Mincio – Mantova</p>
+      <div><a href="#booking" class="btn">Richiedi disponibilità</a><a href="#rooms" class="btn ghost">Scopri le camere</a></div>
+    </div>
+  </div>
+
+  <main>
+    <section id="rooms"><div class="container"><h2>Le nostre camere</h2><div class="grid grid-3" id="roomsGrid"></div></div></section>
+    <section id="gallery"><div class="container"><h2>Galleria</h2><div class="tabs"><button class="tab active" data-tab="all">Tutte</button><button class="tab" data-tab="rooms">Camere</button><button class="tab" data-tab="exteriors">Esterni</button><button class="tab" data-tab="breakfast">Colazione</button></div><div class="gallery" id="galleryGrid"></div></div></section>
+    <section id="map"><div class="container"><h2>Dove siamo</h2><div class="card"><iframe id="mapFrame" title="map" style="width:100%;height:400px" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div><div style="margin-top:12px"><a id="navBtn" class="btn" target="_blank" rel="noreferrer">Indicazioni</a></div></div></section>
+    <section id="contact"><div class="container"><h2>Contatti</h2><div class="grid grid-3"><div class="card"><div class="body"><div class="muted">Chiama</div><a id="telLink" style="font-size:18px"></a></div></div><div class="card"><div class="body"><div class="muted">Scrivici</div><a id="mailLink"></a></div></div><div class="card"><div class="body"><div class="muted">Indirizzo</div><div id="addr"></div></div></div></div></div></section>
+  </main>
+
+  <footer>
+    <div class="container footer-top">
+      <div style="display:flex;gap:12px;align-items:center"><img src="logo.jpg" alt="logo" width="40" height="40" style="border-radius:14px"><div><div style="font-weight:600" id="brand2"></div><div class="muted" id="tagline2"></div></div></div>
+      <div><div style="font-weight:600;margin-bottom:8px">Contatti</div><div><a id="telLink2"></a></div><div><a id="mailLink2"></a></div><div id="addr2"></div></div>
+      <div><div style="font-weight:600;margin-bottom:8px">Link</div><div><a href="#rooms">Camere</a></div><div><a href="#restaurant">Ristoro & Colazione</a></div><div><a href="#experiences">Esperienze</a></div><div><a href="#gallery">Galleria</a></div></div>
+    </div>
+    <div class="container" style="text-align:center;padding-bottom:24px;font-size:12px;color:#666">© <span id="year"></span> Agriturismo Corte San Girolamo. All rights reserved.</div>
+  </footer>
+
+  <div class="sticky"><div class="container bar"><a id="telBtn">📞 Chiama</a><a id="waBtn">💬 WhatsApp</a><a class="primary" id="dirBtn">➤ Indicazioni</a></div></div>
+
+  <script>
+    (function(){
+      const SETTINGS = {
+        NAME: "Agriturismo Corte San Girolamo",
+        TAGLINE: "B&B nel Parco del Mincio – Mantova",
+        PHONE: "+39 347 800 8505",
+        WHATSAPP: "393478008505",
+        EMAIL: "info@agriturismo-sangirolamo.it",
+        ADDRESS: "Str. S. Girolamo, 1, 46100 Mantova MN",
+      };
+
+      function byId(id){ return document.getElementById(id); }
+      function el(tag, attrs={}, children=[]){
+        const n = document.createElement(tag);
+        for(const k in attrs){
+          if(k === "class") n.className = attrs[k];
+          else if(k === "style") n.style.cssText = attrs[k];
+          else n.setAttribute(k, attrs[k]);
+        }
+        children.forEach(c => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+        return n;
+      }
+
+      // Set static text
+      byId("brand").textContent = SETTINGS.NAME;
+      byId("brand2").textContent = SETTINGS.NAME;
+      byId("tagline2").textContent = SETTINGS.TAGLINE;
+      byId("telLink").href = "tel:" + SETTINGS.PHONE; byId("telLink").textContent = SETTINGS.PHONE;
+      byId("telLink2").href = "tel:" + SETTINGS.PHONE; byId("telLink2").textContent = SETTINGS.PHONE;
+      byId("telBtn").href = "tel:" + SETTINGS.PHONE;
+      byId("waBtn").href = "https://wa.me/" + SETTINGS.WHATSAPP;
+      byId("mailLink").href = "mailto:" + SETTINGS.EMAIL; byId("mailLink").textContent = SETTINGS.EMAIL;
+      byId("mailLink2").href = "mailto:" + SETTINGS.EMAIL; byId("mailLink2").textContent = SETTINGS.EMAIL;
+      byId("addr").textContent = SETTINGS.ADDRESS; byId("addr2").textContent = SETTINGS.ADDRESS;
+      byId("year").textContent = new Date().getFullYear();
+      const q = encodeURIComponent(SETTINGS.ADDRESS);
+      byId("mapFrame").src = "https://www.google.com/maps?q=" + q + "&z=14&output=embed";
+      byId("navBtn").href = "https://www.google.com/maps/dir/?api=1&destination=" + q;
+      byId("dirBtn").href = "https://www.google.com/maps/dir/?api=1&destination=" + q;
+
+      function loadContent(){
+        const base = "content.json";
+        const url = base + (base.includes("?") ? "&" : "?") + "v=" + Date.now();
+        return fetch(url, { cache: "no-store" }).then(r => r.ok ? r.json() : null);
+      }
+
+      function normalize(list){ return Array.isArray(list) ? list.map(it => (typeof it === "string" ? {src: it, label: ""} : {src: it && it.src, label: (it && it.label) || ""})).filter(x => !!x.src) : []; }
+
+      function render(content){
+        // HERO
+        const hero = byId("hero");
+        const heroSrc = content.hero || (content.exteriors[0] && content.exteriors[0].src) || "";
+        if(heroSrc){ hero.style.backgroundImage = "linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)), url(" + heroSrc + ")"; }
+
+        // ROOMS (use first 3 images from rooms, else exteriors)
+        const roomsGrid = byId("roomsGrid");
+        roomsGrid.innerHTML = "";
+        const roomsImages = content.rooms.length ? content.rooms.slice(0,3) : content.exteriors.slice(0,3);
+        roomsImages.forEach((it, idx) => {
+          roomsGrid.appendChild(el("div", {class: "card"}, [
+            el("img", {class:"img", src: it.src, alt: it.label || "Camera " + (idx+1)}),
+            el("div", {class:"body"}, [
+              el("div", {style:"display:flex;justify-content:space-between;align-items:center"}, [
+                el("h3", {style:"font-size:18px;font-weight:600"}, ["Camera " + String(idx+1).padStart(2,"0")]),
+                el("div", {}, [el("span", {style:"font-weight:700"}, ["€ —"]), el("span", {class:"muted"}, [" /notte"])])
+              ]),
+              el("div", {class:"muted"}, ["Wifi • Clima • Bagno privato"])
+            ])
+          ]));
+        });
+
+        // GALLERY
+        const tabs = document.querySelectorAll(".tab");
+        const galleryGrid = byId("galleryGrid");
+        function computeAll(){
+          const all = []
+            .concat(content.rooms.slice(0,6))
+            .concat(content.exteriors.slice(0,6))
+            .concat(content.breakfast.slice(0,6))
+            .concat(content.gallery)
+            .slice(0,15);
+          return all;
+        }
+        function paint(list){
+          galleryGrid.innerHTML = "";
+          list.forEach((it,i) => {
+            const wrap = el("div", {style:"position:relative"}, [
+              el("img", {src: it.src, alt: it.label || ("ph-"+i)})
+            ]);
+            if(it.label) wrap.appendChild(el("div", {class:"muted", style:"position:absolute;left:6px;right:6px;bottom:6px;background:rgba(0,0,0,.55);color:#fff;padding:4px 8px;border-radius:8px;font-size:12px"}, [it.label]));
+            galleryGrid.appendChild(wrap);
+          });
+        }
+        let current = "all";
+        const allList = computeAll();
+        paint(allList);
+        tabs.forEach(btn => btn.addEventListener("click", () => {
+          tabs.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          current = btn.getAttribute("data-tab");
+          if(current === "all") paint(allList);
+          else paint(content[current] || []);
+        }));
+      }
+
+      loadContent()
+        .then(j => {
+          if(!j) throw new Error("content.json non trovato");
+          const c = {
+            rooms: normalize(j.images && j.images.rooms || []),
+            exteriors: normalize(j.images && j.images.exteriors || []),
+            breakfast: normalize(j.images && j.images.breakfast || []),
+            gallery: normalize(j.images && j.images.gallery || []),
+            hero: j.hero || ""
+          };
+          render(c);
+        })
+        .catch(err => {
+          console.error(err);
+          // Fallback: hero con logo
+          byId("hero").style.backgroundImage = "url(logo.jpg)";
+        });
+
+      // Register SW (optional)
+      if("serviceWorker" in navigator){
+        navigator.serviceWorker.register("sw.js").catch(()=>{});
+      }
+    })();
+  </script>
+</body>
+</html>
