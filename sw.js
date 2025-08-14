@@ -6,7 +6,6 @@ const ASSETS = [
   './app.js',
   './manifest.webmanifest',
   './assets/gallery.json',
-  './assets/i18n.json',
   './assets/Home.jpg',
   './assets/logo.jpg',
   './assets/icons/icon-192.png',

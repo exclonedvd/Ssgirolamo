@@ -36,21 +36,3 @@ NOTE TECNICHE
 - JS: app.js (menu, smooth scroll, galleria, PWA)
 
 Per aggiornare i testi, modifica direttamente le sezioni in index.html.
-
-AGGIUNTE (v2)
--------------
-- Lightbox galleria: clic su una foto per aprirla a tutto schermo; frecce o tastiera ← → per navigare.
-- Modulo CONTATTI (Netlify Forms). Funziona automaticamente su Netlify; in locale salva in localStorage a scopo test.
-- Multilingua IT/EN/DE: pulsanti in alto a destra. Traduzioni in assets/i18n.json.
-- Richiesta disponibilità (prenotazioni) senza prezzi: invio via Netlify Forms o EmailJS.
-
-EMAILJS (opzionale)
--------------------
-1) Apri index.html e togli il commento allo script EmailJS CDN.
-2) In app.js imposta EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID.
-3) Personalizza il template EmailJS con i campi del form.
-
-NETLIFY FORMS
---------------
-- Pubblica la cartella su Netlify. Le form 'contact' e 'booking' appariranno nella dashboard.
-- Lo honeypot 'bot-field' riduce lo spam.
