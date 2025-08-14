@@ -84,3 +84,48 @@ header.hero::after{
 footer{background:#0e2a18; color:#e8f1ea; padding:24px 16px; margin-top:40px}
 footer a{color:#e8f1ea}
 .small{font-size:12px; opacity:.8}
+
+/* Lang switcher */
+.lang-switch{position:fixed; top:16px; right:170px; z-index:1002; display:flex; gap:6px}
+.lang-switch button{
+  padding:8px 10px; border-radius:10px; border:1px solid #ddd; background:#fff; cursor:pointer; font-weight:700;
+}
+.lang-switch button.active{border-color:var(--brand); color:var(--brand)}
+
+/* Lightbox */
+.lightbox{position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; align-items:center; justify-content:center; z-index:2000}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw; max-height:80vh; border-radius:12px}
+.lightbox .controls{position:absolute; top:12px; right:12px; display:flex; gap:8px}
+.lightbox button{padding:10px 12px; border-radius:10px; border:none; background:#fff; cursor:pointer; font-weight:700}
+.lightbox .prev, .lightbox .next{position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.85)}
+.lightbox .prev{left:12px} .lightbox .next{right:12px}
+
+/* Forms */
+form{display:grid; gap:12px}
+.input{display:flex; flex-direction:column; gap:6px}
+.input input, .input textarea, .input select{
+  padding:12px 14px; border:1px solid #ddd; border-radius:10px; font:inherit;
+}
+.input textarea{min-height:120px; resize:vertical}
+.inline{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media (max-width: 640px){ .inline{grid-template-columns:1fr} }
+.success{padding:12px; border-radius:10px; background:#eaf7ee; color:#1a5b2a; display:none}
+.error{padding:12px; border-radius:10px; background:#fdeceb; color:#8a1f1f; display:none}
+small.hint{opacity:.8}
+
+
+/* WhatsApp enhancements */
+.wa-fab{
+  position:fixed; right:16px; bottom:80px; z-index:1500;
+  display:inline-flex; align-items:center; gap:8px;
+  background:#25D366; color:#fff; text-decoration:none; font-weight:700;
+  padding:12px 14px; border-radius:999px; box-shadow:0 10px 24px rgba(0,0,0,.2);
+}
+.wa-fab svg{display:block}
+@media (max-width: 520px){
+  .wa-fab span{display:none}
+  .wa-fab{border-radius:50%; width:52px; height:52px; justify-content:center; padding:0}
+}
+.btn.whatsapp{background:#25D366}
+.btn.whatsapp:hover{filter:brightness(0.95)}

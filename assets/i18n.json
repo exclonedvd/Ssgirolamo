@@ -39,6 +39,8 @@
     "call_now": "Chiama ora",
     "form_thanks": "Grazie! La tua richiesta è stata inviata.",
     "form_error": "Ops, qualcosa non ha funzionato. Riprova più tardi.",
+    "nav_whatsapp": "WhatsApp",
+    "whatsapp_btn": "Scrivici su WhatsApp",
     "whatsapp_chat": "Chatta su WhatsApp"
   },
   "en": {
@@ -81,6 +83,8 @@
     "call_now": "Call now",
     "form_thanks": "Thanks! Your request has been sent.",
     "form_error": "Oops, something went wrong. Please try again later.",
+    "nav_whatsapp": "WhatsApp",
+    "whatsapp_btn": "Chat on WhatsApp",
     "whatsapp_chat": "Chat on WhatsApp"
   },
   "de": {
@@ -123,6 +127,8 @@
     "call_now": "Jetzt anrufen",
     "form_thanks": "Danke! Ihre Anfrage wurde gesendet.",
     "form_error": "Ups, etwas ist schiefgelaufen. Bitte später erneut versuchen.",
+    "nav_whatsapp": "WhatsApp",
+    "whatsapp_btn": "Auf WhatsApp chatten",
     "whatsapp_chat": "Auf WhatsApp chatten"
   }
 }
