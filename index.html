@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agriturismo Corte San Girolamo</title>
+    <meta name="theme-color" content="#5b4636" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+    <!-- Tailwind (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React + ReactDOM + Babel (for in-browser JSX) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      html, body { background: #f6f4f1; }
+    </style>
+  </head>
+  <body>
+    <noscript>Per favore abilita JavaScript.</noscript>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo } = React;
+
+      /* =========================
+         SETTINGS
+         ========================= */
+      const SETTINGS = {
+        NAME: "Agriturismo Corte San Girolamo",
+        TAGLINE: "B&B nel Parco del Mincio – Mantova",
+        PHONE: "+39 347 800 8505",
+        WHATSAPP: "393478008505",
+        EMAIL: "info@agriturismo-sangirolamo.it",
+        ADDRESS: "Str. S. Girolamo, 1, 46100 Mantova MN",
+        HERO_IMAGE: "media/esterni/esterni-001.webp", // verrà sovrascritto da content.hero se presente
+        LOGO_URL: "logo.jpg"
+      };
+
+      /* =========================
+         DYNAMIC CONTENT
+         ========================= */
+      const CONTENT_DEFAULT = { rooms: [], exteriors: [], breakfast: [], gallery: [], hero: "" };
+
+      const normalizeImages = (list) => {
+        if (!Array.isArray(list)) return [];
+        return list.map((it) => (typeof it === "string" ? { src: it, label: "" } : { src: it?.src, label: it?.label || "" })).filter(x => !!x.src);
+      };
+
+      function useContent() {
+        const [content, setContent] = useState(CONTENT_DEFAULT);
+        useEffect(() => {
+          const getContentURL = () => {
+            try {
+              const u = new URL(window.location.href);
+              const override = u.searchParams.get("content");
+              const base = (override && /^https?:\/\//.test(override)) ? override : "content.json";
+              const sep = base.includes("?") ? "&" : "?";
+              return base + sep + "v=" + Date.now();
+            } catch {
+              return "content.json?v=" + Date.now();
+            }
+          };
+          fetch(getContentURL(), { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((j) => {
+              if (j) {
+                setContent({
+                  rooms: normalizeImages(j.images?.rooms || []),
+                  exteriors: normalizeImages(j.images?.exteriors || []),
+                  breakfast: normalizeImages(j.images?.breakfast || []),
+                  gallery: normalizeImages(j.images?.gallery || []),
+                  hero: j.hero || ""
+                });
+              }
+            })
+            .catch(() => {});
+        }, []);
+        return content;
+      }
+
+      /* =========================
+         DICTIONARY
+         ========================= */
+      const DICT = {
+        it: {
+          nav: { rooms: "Camere", restaurant: "Ristoro & Colazione", experiences: "Esperienze", gallery: "Galleria", map: "Mappa", contact: "Contatti" },
+          hero: { title: SETTINGS.NAME, subtitle: SETTINGS.TAGLINE, cta: "Richiedi disponibilità", secondary: "Scopri le camere" },
+          booking: {
+            title: "Richiesta disponibilità", name: "Nome e cognome", email: "Email", phone: "Telefono",
+            checkin: "Arrivo", checkout: "Partenza", guests: "Ospiti", room: "Alloggio", notes: "Richieste/Note",
+            submit: "Invia richiesta", est: "Stima", nights: (n) => `${n} notte${n===1?"":"i"}`, openWhatsApp: "Apri WhatsApp", or: "oppure", emailUs: "Invia email"
+          },
+          rooms: { title: "Le nostre camere", amenities: "Servizi inclusi" },
+          restaurant: { title: "Ristoro & Colazione", text: "Colazione dolce e salata nella sala principale. Opzioni GF/vegan/lactose-free su richiesta.", hours: "Colazione: 8:00–9:30 · Ristoro: sab–dom a pranzo (apr–ott)", board: "Tagliere misto (min 2) 25 €" },
+          experiences: { title: "Esperienze", items: [
+            { title: "Apiari di San Girolamo", text: "Tour guidato tra api, alveari e fioriture." },
+            { title: "Massaggi & Benessere", text: "Relax, metamerico, scrub al miele." },
+            { title: "Noleggio biciclette", text: "Bici muscolari ed e‑bike con accessori." },
+            { title: "Orto & Natura", text: "Passeggiate nel bosco e orto naturale." }
+          ]},
+          gallery: { title: "Galleria" },
+          map: { title: "Dove siamo", openNav: "Indicazioni" },
+          contact: { title: "Contatti", call: "Chiama", write: "Scrivici", address: "Indirizzo" },
+          install: { prompt: "Installa l'app", ios: "iOS: Condividi → Aggiungi a Home", android: "Android: Menu ⋮ → Aggiungi a Home" },
+          cookie: { text: "Usiamo cookie tecnici per migliorare la tua esperienza.", ok: "Ok" },
+          share: "Condividi",
+          mediaTabs: { all: "Tutte", rooms: "Camere", exteriors: "Esterni", breakfast: "Colazione" }
+        }
+      };
+
+      /* ========================= */
+      const useLang = () => {
+        const [lang, setLang] = useState("it");
+        const t = (path) => {
+          const parts = path.split(".");
+          let obj = DICT[lang];
+          for (const p of parts) obj = obj?.[p];
+          return typeof obj === "function" ? obj : () => obj;
+        };
+        return { lang, setLang, t };
+      };
+
+      const classNames = (...xs) => xs.filter(Boolean).join(" ");
+
+      const Section = ({id, title, children}) => (
+        <section id={id} className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {title && <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">{title}</h2>}
+          {children}
+        </section>
+      );
+
+      function Navbar({ lang, setLang }) {
+        const [open, setOpen] = useState(false);
+        const links = [
+          { href: "#rooms", label: DICT[lang].nav.rooms },
+          { href: "#restaurant", label: DICT[lang].nav.restaurant },
+          { href: "#experiences", label: DICT[lang].nav.experiences },
+          { href: "#gallery", label: DICT[lang].nav.gallery },
+          { href: "#map", label: DICT[lang].nav.map },
+          { href: "#contact", label: DICT[lang].nav.contact },
+        ];
+        return (
+          <header className="sticky top-0 z-40 backdrop-blur bg-white/70 border-b">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              <a href="#" className="font-semibold text-lg flex items-center gap-2">
+                <img src={SETTINGS.LOGO_URL} alt="logo" className="w-8 h-8 rounded-full object-cover"/>
+                <span>{SETTINGS.NAME}</span>
+              </a>
+              <nav className="hidden md:flex items-center gap-6">
+                {links.map((l) => <a key={l.href} href={l.href} className="text-sm hover:opacity-70">{l.label}</a>)}
+              </nav>
+              <button className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border" onClick={()=>setOpen(v=>!v)} aria-label="Menu">☰</button>
+            </div>
+            {open && (
+              <div className="md:hidden border-t bg-white">
+                <div className="px-4 py-3 flex flex-col gap-3">
+                  {links.map((l) => <a key={l.href} href={l.href} className="py-2" onClick={()=>setOpen(false)}>{l.label}</a>)}
+                </div>
+              </div>
+            )}
+          </header>
+        );
+      }
+
+      const Hero = ({ t, heroSrc }) => {
+        const bg = heroSrc || SETTINGS.HERO_IMAGE;
+        return (
+          <div className="relative w-full h-[60vh] sm:h-[70vh] flex items-center"
+               style={{backgroundImage: `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)), url(${bg})`, backgroundSize:"cover", backgroundPosition:"center"}}>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+              <div className="text-white max-w-2xl">
+                <h1 className="text-4xl sm:text-5xl font-semibold mb-3">{t("hero.title")()}</h1>
+                <p className="text-lg sm:text-xl opacity-95 mb-6">{t("hero.subtitle")()}</p>
+                <div className="flex flex-wrap gap-3">
+                  <a href="#booking" className="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-white text-black font-medium shadow">{t("hero.cta")()}</a>
+                  <a href="#rooms" className="inline-flex items-center justify-center px-5 py-3 rounded-2xl border border-white/80 text-white">{t("hero.secondary")()}</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const ROOMS = [
+        { id:"ulivo", name_it:"Camera Ulivo", name_en:"Olive Room", price:95, pax:2, size:20, img:"media/camere/camere-001.webp", amenities:["Wi‑Fi","Climatizzazione","Bagno privato","Colazione"] },
+        { id:"vigna", name_it:"Camera Vigna", name_en:"Vineyard Room", price:120, pax:3, size:26, img:"media/camere/camere-002.webp", amenities:["Vista panoramica","Wi‑Fi","Climatizzazione","Colazione"] },
+        { id:"mare", name_it:"Suite Mare", name_en:"Sea Suite", price:160, pax:4, size:35, img:"media/camere/camere-003.webp", amenities:["Terrazza","Angolo cottura","Wi‑Fi","Colazione"] },
+      ];
+
+      function Rooms({ t, lang }) {
+        return (
+          <Section id="rooms" title={t("rooms.title")()}>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {ROOMS.map((r) => (
+                <div key={r.id} className="rounded-2xl overflow-hidden border bg-white shadow-sm">
+                  <img src={r.img} alt={r.name_it} className="h-48 w-full object-cover" />
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">{r.name_it}</h3>
+                      <div className="text-right">
+                        <div className="text-xl font-semibold">€ {r.price}<span className="text-sm font-normal opacity-70">/notte</span></div>
+                      </div>
+                    </div>
+                    <div className="text-sm opacity-80">{r.size} m² • {r.pax} pax</div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {r.amenities.map((a) => <span key={a} className="px-2 py-1 rounded-full bg-gray-100 border">{a}</span>)}
+                    </div>
+                    <a href="#booking" className="mt-2 inline-flex justify-center px-4 py-2 rounded-xl bg-black text-white">{DICT.it.hero.cta}</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        );
+      }
+
+      const Lightbox = ({ src, label, onClose }) => {
+        if (!src) return null;
+        return (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="max-w-[92vw] w-full max-h-[92vh]">
+              <img src={src} alt={label || "preview"} className="w-full max-h-[80vh] object-contain rounded-xl shadow" />
+              {label && <div className="mt-2 text-center text-white text-sm opacity-90">{label}</div>}
+            </div>
+          </div>
+        );
+      };
+
+      const PhotoGrid = ({ items }) => {
+        const [open, setOpen] = useState(null);
+        const [label, setLabel] = useState("");
+        return (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {items.map((it, i) => (
+                <button key={i} className="relative group" onClick={() => { setOpen(it.src); setLabel(it.label || ""); }}>
+                  <img src={it.src} alt={it.label || `ph-${i}`} className="rounded-xl h-40 md:h-56 w-full object-cover" />
+                  {it.label && <span className="absolute bottom-1 left-1 right-1 text-xs bg-black/55 text-white px-2 py-1 rounded opacity-90">{it.label}</span>}
+                  <span className="absolute inset-0 rounded-xl ring-2 ring-white/0 group-hover:ring-white/60 transition"></span>
+                </button>
+              ))}
+            </div>
+            <Lightbox src={open} label={label} onClose={() => setOpen(null)} />
+          </>
+        );
+      };
+
+      function Gallery({ t, images }) {
+        const tabs = [
+          { key:"all", label: t("mediaTabs.all")() },
+          { key:"rooms", label: t("mediaTabs.rooms")() },
+          { key:"exteriors", label: t("mediaTabs.exteriors")() },
+          { key:"breakfast", label: t("mediaTabs.breakfast")() },
+        ];
+        const [tab, setTab] = useState("all");
+        const fallbackObjs = []; // niente fallback, mostriamo solo ciò che c'è
+        const all = (images.rooms||[]).slice(0,6)
+          .concat((images.exteriors||[]).slice(0,6))
+          .concat((images.breakfast||[]).slice(0,6))
+          .concat(images.gallery||[]).slice(0,15);
+        const current = tab==="all" ? all : (images[tab] && images[tab].length ? images[tab] : fallbackObjs);
+        return (
+          <Section id="gallery" title={t("gallery.title")()}>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {tabs.map(ti => (
+                <button key={ti.key} onClick={()=>setTab(ti.key)} className={["px-3 py-2 rounded-xl border text-sm", tab===ti.key? "bg-black text-white":"bg-white"].join(" ")}>
+                  {ti.label}
+                </button>
+              ))}
+            </div>
+            <PhotoGrid items={current} />
+          </Section>
+        );
+      }
+
+      function Map({ t }) {
+        const q = encodeURIComponent(SETTINGS.ADDRESS);
+        const mapSrc = `https://www.google.com/maps?q=${q}&z=14&output=embed`;
+        return (
+          <Section id="map" title={t("map.title")()}>
+            <div className="rounded-2xl overflow-hidden border">
+              <iframe title="map" src={mapSrc} className="w-full h-[400px]" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+            </div>
+            <div className="mt-4">
+              <a className="inline-flex px-4 py-2 rounded-xl bg-black text-white" href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noreferrer">{t("map.openNav")()}</a>
+            </div>
+          </Section>
+        );
+      }
+
+      function Contact({ t }) {
+        return (
+          <Section id="contact" title={t("contact.title")()}>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="rounded-2xl border p-4"><div className="font-semibold mb-1">{t("contact.call")()}</div><a href={`tel:${SETTINGS.PHONE}`} className="text-lg hover:underline">{SETTINGS.PHONE}</a></div>
+              <div className="rounded-2xl border p-4"><div className="font-semibold mb-1">{t("contact.write")()}</div><a href={`mailto:${SETTINGS.EMAIL}`} className="hover:underline">{SETTINGS.EMAIL}</a></div>
+              <div className="rounded-2xl border p-4"><div className="font-semibold mb-1">{t("contact.address")()}</div><div>{SETTINGS.ADDRESS}</div></div>
+            </div>
+          </Section>
+        );
+      }
+
+      const CookieBanner = ({ t }) => {
+        const [ok, setOk] = useState(true);
+        useEffect(() => { const v = localStorage.getItem("cookie-ok"); setOk(!!v); }, []);
+        if (ok) return null;
+        return (
+          <div className="fixed bottom-20 left-0 right-0 z-50">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-white border shadow rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-3">
+                <div className="text-sm">{t("cookie.text")()}</div>
+                <button className="sm:ml-auto px-4 py-2 rounded-xl bg-black text-white" onClick={()=>{ localStorage.setItem("cookie-ok","1"); setOk(true); }}>{t("cookie.ok")()}</button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const Footer = ({ lang }) => (
+        <footer className="mt-12 border-t">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid md:grid-cols-3 gap-6 text-sm">
+            <div className="flex items-center gap-3">
+              <img src={SETTINGS.LOGO_URL} alt="logo" className="w-10 h-10 rounded-full object-cover"/>
+              <div><div className="font-semibold">{SETTINGS.NAME}</div><div className="opacity-70">{SETTINGS.TAGLINE}</div></div>
+            </div>
+            <div>
+              <div className="font-semibold mb-2">{DICT.it.nav.contact}</div>
+              <div><a className="hover:underline" href={`tel:${SETTINGS.PHONE}`}>{SETTINGS.PHONE}</a></div>
+              <div><a className="hover:underline" href={`mailto:${SETTINGS.EMAIL}`}>{SETTINGS.EMAIL}</a></div>
+              <div>{SETTINGS.ADDRESS}</div>
+            </div>
+            <div>
+              <div className="font-semibold mb-2">Link</div>
+              <ul className="space-y-1">
+                <li><a className="hover:underline" href="#rooms">{DICT.it.nav.rooms}</a></li>
+                <li><a className="hover:underline" href="#restaurant">{DICT.it.nav.restaurant}</a></li>
+                <li><a className="hover:underline" href="#experiences">{DICT.it.nav.experiences}</a></li>
+                <li><a className="hover:underline" href="#gallery">{DICT.it.nav.gallery}</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="text-xs text-center opacity-60 pb-6">© {new Date().getFullYear()} {SETTINGS.NAME}. All rights reserved.</div>
+        </footer>
+      );
+
+      const StickyBar = ({ lang }) => (
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t bg-white/95 backdrop-blur">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-3">
+            <a href={`tel:${SETTINGS.PHONE}`} className="flex-1 inline-flex justify-center items-center h-11 rounded-xl border">📞 {DICT.it.contact?.call || "Chiama"}</a>
+            <a href={`https://wa.me/${SETTINGS.WHATSAPP}`} className="flex-1 inline-flex justify-center items-center h-11 rounded-xl border">💬 WhatsApp</a>
+            <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SETTINGS.ADDRESS)}`} className="flex-1 inline-flex justify-center items-center h-11 rounded-xl bg-black text-white">➤ {DICT.it.map.openNav}</a>
+          </div>
+        </div>
+      );
+
+      function Booking({ t, lang }) {
+        const [data, setData] = useState({ name:"", email:"", phone:"", checkin:"", checkout:"", guests:2, room: ROOMS[0].id, notes:"" });
+        const selectedRoom = useMemo(() => ROOMS.find((r)=>r.id===data.room) || ROOMS[0], [data.room]);
+        const nights = useMemo(() => {
+          if (!data.checkin || !data.checkout) return 0;
+          const diff = new Date(data.checkout) - new Date(data.checkin);
+          return diff > 0 ? Math.ceil(diff / (1000*60*60*24)) : 0;
+        }, [data.checkin, data.checkout]);
+        const estimate = nights * (selectedRoom?.price || 0);
+        const handleChange = (e) => setData((d) => ({ ...d, [e.target.name]: e.target.value }));
+        const buildMessage = () => {
+          const est = estimate ? `\n${DICT.it.booking.est}: € ${estimate} (${DICT.it.booking.nights(nights)})` : "";
+          return `Ciao ${SETTINGS.NAME}, sono ${data.name}.\nVorrei info per ${selectedRoom.name_it}.\nDate: ${data.checkin||"?"} → ${data.checkout||"?"}\nOspiti: ${data.guests}${data.phone?`\nTelefono: ${data.phone}`:""}${data.notes?`\nNote: ${data.notes}`:""}${est}`;
+        };
+        const submitWhatsApp = () => window.open(`https://wa.me/${SETTINGS.WHATSAPP}?text=${encodeURIComponent(buildMessage())}`, "_blank");
+        const submitEmail = () => {
+          const subject = `${DICT.it.booking.title} – ${SETTINGS.NAME}`;
+          const body = buildMessage();
+          window.location.href = `mailto:${SETTINGS.EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        };
+        return (
+          <Section id="booking" title={DICT.it.booking.title}>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 rounded-2xl border p-4 bg-white">
+                <form onSubmit={(e)=>{e.preventDefault(); submitWhatsApp();}} className="grid sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="text-sm">{DICT.it.booking.name}</label>
+                    <input className="mt-1 w-full px-3 py-2 rounded-xl border" name="name" value={data.name} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label className="text-sm">{DICT.it.booking.email}</label>
+                    <input type="email" className="mt-1 w-full px-3 py-2 rounded-xl border" name="email" value={data.email} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label className="text-sm">{DICT.it.booking.phone}</label>
+                    <input className="mt-1 w-full px-3 py-2 rounded-xl border" name="phone" value={data.phone} onChange={handleChange} />
+                  </div>
+                  <div>
+                    <label className="text-sm">{DICT.it.booking.checkin}</label>
+                    <input type="date" className="mt-1 w-full px-3 py-2 rounded-xl border" name="checkin" value={data.checkin} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label className="text-sm">{DICT.it.booking.checkout}</label>
+                    <input type="date" className="mt-1 w-full px-3 py-2 rounded-xl border" name="checkout" value={data.checkout} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label className="text-sm">{DICT.it.booking.guests}</label>
+                    <input type="number" min="1" max="10" className="mt-1 w-full px-3 py-2 rounded-xl border" name="guests" value={data.guests} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label className="text-sm">{DICT.it.booking.room}</label>
+                    <select className="mt-1 w-full px-3 py-2 rounded-xl border" name="room" value={data.room} onChange={handleChange}>
+                      {ROOMS.map((r)=> <option key={r.id} value={r.id}>{r.name_it}</option>)}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-sm">{DICT.it.booking.notes}</label>
+                    <textarea rows="4" className="mt-1 w-full px-3 py-2 rounded-xl border" name="notes" value={data.notes} onChange={handleChange}></textarea>
+                  </div>
+                  <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+                    <button type="submit" className="px-5 py-3 rounded-2xl bg-black text-white">{DICT.it.booking.openWhatsApp}</button>
+                    <span className="opacity-60 text-sm">{DICT.it.booking.or}</span>
+                    <button type="button" onClick={submitEmail} className="px-5 py-3 rounded-2xl border">{DICT.it.booking.emailUs}</button>
+                    {nights>0 && (<div className="ml-auto text-sm bg-gray-100 border px-3 py-2 rounded-xl">{DICT.it.booking.est}: <b>€ {estimate}</b> · {DICT.it.booking.nights(nights)}</div>)}
+                  </div>
+                </form>
+              </div>
+              <div className="rounded-2xl border p-4 bg-gray-50">
+                <h4 className="font-semibold mb-2">Info & FAQ</h4>
+                <ul className="text-sm space-y-2 opacity-90">
+                  <li>• Check‑in 13:00–18:00 · Check‑out 11:00</li>
+                  <li>• Colazione 8:00–9:30 (sala principale)</li>
+                  <li>• Animali ammessi: +5 €/notte (non lasciarli soli in camera salvo autorizzazione)</li>
+                  <li>• Wi‑Fi: <b>sangirolamo1</b></li>
+                  <li>• Cucina comune H24: microonde, induzione, frigo/freezer ospiti, bevande a pagamento, caffè/tisane, giochi e libri</li>
+                </ul>
+              </div>
+            </div>
+          </Section>
+        );
+      }
+
+      function Restaurant({ t }) {
+        return (
+          <Section id="restaurant" title={t("restaurant.title")()}>
+            <div className="grid md:grid-cols-2 gap-6 items-center">
+              <img src="media/galleria/galleria-001.webp" alt="Ristoro" className="rounded-2xl w-full h-72 object-cover" />
+              <div>
+                <p className="text-lg mb-3">{t("restaurant.text")()}</p>
+                <p className="opacity-70 mb-3">{t("restaurant.hours")()}</p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 border text-sm">{t("restaurant.board")()}</div>
+              </div>
+            </div>
+          </Section>
+        );
+      }
+
+      function Experiences({ t }) {
+        const items = DICT.it.experiences.items;
+        const images = [
+          "media/galleria/galleria-002.webp",
+          "media/galleria/galleria-003.webp",
+          "media/galleria/galleria-001.webp",
+          "media/esterni/esterni-001.webp"
+        ];
+        return (
+          <Section id="experiences" title={t("experiences.title")()}>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {items.map((it, i) => (
+                <div key={i} className="rounded-2xl overflow-hidden border bg-white">
+                  <img src={images[i]} alt={it.title} className="h-40 w-full object-cover" />
+                  <div className="p-4">
+                    <div className="font-semibold mb-1">{it.title}</div>
+                    <div className="text-sm opacity-80">{it.text}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        );
+      }
+
+      const InstallHint = ({ t }) => {
+        const [show, setShow] = useState(false);
+        useEffect(() => {
+          const ua = navigator.userAgent.toLowerCase();
+          const isIOS = /iphone|ipad|ipod/.test(ua);
+          const isAndroid = /android/.test(ua);
+          const seen = sessionStorage.getItem("install-hint");
+          if (!seen && (isIOS || isAndroid)) setTimeout(()=>setShow(true), 1500);
+        }, []);
+        if (!show) return null;
+        const ua = navigator.userAgent.toLowerCase();
+        const isIOS = /iphone|ipad|ipod/.test(ua);
+        return (
+          <div className="fixed top-20 inset-x-0 z-40">
+            <div className="max-w-6xl mx-auto px-4">
+              <div className="rounded-2xl border bg-white shadow p-3 flex items-center gap-3">
+                <span className="text-sm font-medium">{t("install.prompt")()}</span>
+                <span className="text-xs opacity-70">{isIOS ? t("install.ios")() : t("install.android")()}</span>
+                <button className="ml-auto text-sm underline" onClick={()=>sessionStorage.setItem("install-hint","1")||setShow(false)}>Ok</button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      function App() {
+        const { lang, setLang, t } = useLang();
+        const content = useContent();
+        const heroSrc = content.hero || (content.exteriors?.[0]?.src) || SETTINGS.HERO_IMAGE;
+
+        useEffect(() => {
+          document.documentElement.classList.add("h-full");
+          document.body.classList.add("min-h-screen", "bg-gray-50");
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(()=>{});
+          }
+        }, []);
+
+        return (
+          <div className="min-h-screen flex flex-col">
+            <Navbar lang={lang} setLang={setLang} />
+            <Hero t={t} heroSrc={heroSrc} />
+
+            <main>
+              <Rooms t={t} lang={lang} />
+              <Restaurant t={t} />
+              <Experiences t={t} />
+              <Gallery t={t} images={content} />
+              <Booking t={t} lang={lang} />
+              <Map t={t} />
+              <Contact t={t} />
+            </main>
+
+            <Footer lang={lang} />
+            <StickyBar lang={lang} />
+            <InstallHint t={t} />
+            <CookieBanner t={t} />
+
+            <div className="fixed right-4 bottom-24"></div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
