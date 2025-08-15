@@ -1,0 +1,179 @@
+{
+  "categories": [
+    {
+      "name": "La tradizione",
+      "slug": "tradizione",
+      "items": [
+        {
+          "name": "Antica osteria ai ranari",
+          "phone": "+39 0376 328431",
+          "address": "Via Trieste 11, 46100 Mantova"
+        },
+        {
+          "name": "Trattoria dell’oca",
+          "phone": "+39 0376 327171",
+          "address": "Via Trieste 10, 46100 Mantova"
+        },
+        {
+          "name": "Trattoria la stella",
+          "phone": "+39 0376 300635",
+          "address": "Via della Libertà 129, 46047 Soave di Porto Mantovano (MN)"
+        },
+        {
+          "name": "La fragoletta",
+          "phone": "+39 0376 323300",
+          "address": "Piazza Arche 5, 46100 Mantova"
+        },
+        {
+          "name": "La cucina",
+          "phone": "+39 0376 1513735",
+          "address": "Via G. Oberdan 17, 46100 Mantova"
+        },
+        {
+          "name": "Sucar brusc",
+          "phone": "+39 333 1848730",
+          "address": "Via C. B. Cavour 49, 46100 Mantova"
+        },
+        {
+          "name": "Osterie delle 5 lire",
+          "phone": "+39 0376 669082",
+          "address": "Strada Ostigliese 1, Roncoferraro (MN)"
+        },
+        {
+          "name": "Sordello 26",
+          "phone": "+39 0376 221107",
+          "address": "Piazza Sordello 26, 46100 Mantova"
+        },
+        {
+          "name": "Retrobottega bistrot",
+          "phone": "+39 0376 366224",
+          "address": "Via G.B. Spagnoli 6/8, 46100 Mantova"
+        },
+        {
+          "name": "Osteria del campione",
+          "phone": "+39 0376 288844",
+          "address": "Corso Umberto I 15, 46100 Mantova"
+        },
+        {
+          "name": "Bice la gallina felice",
+          "phone": "+39 0376 288368",
+          "address": "Via A. Carbonati 4/6, 46100 Mantova"
+        },
+        {
+          "name": "Bigoleria al torchio",
+          "phone": "+39 348 0466563",
+          "address": "Via Solferino e San Martino 31, 46100 Mantova"
+        },
+        {
+          "name": "Piccola osteria Andes",
+          "phone": "+39 0376 355596",
+          "address": "Piazza L. B. Alberti 32, 46100 Mantova"
+        }
+      ]
+    },
+    {
+      "name": "La carne",
+      "slug": "carne",
+      "items": [
+        {
+          "name": "Da Vasco",
+          "phone": "+39 0376 26264",
+          "address": "Via Cremona 27, 46100 Mantova"
+        },
+        {
+          "name": "Tramvai",
+          "phone": "+39 0376 1620576",
+          "address": "Strada Dosso del Corso 1, 46100 Mantova"
+        },
+        {
+          "name": "L’officina del panino",
+          "phone": "+39 335 7202742",
+          "address": "Via Giorgio Gaber 2, 46100 Mantova"
+        },
+        {
+          "name": "Al portichetto",
+          "phone": "+39 0376 1906020",
+          "address": "Via Portichetto 14, 46100 Mantova"
+        }
+      ]
+    },
+    {
+      "name": "La pizza",
+      "slug": "pizza",
+      "items": [
+        {
+          "name": "Il quadrato",
+          "phone": "+39 0376 368896",
+          "address": "Piazza Virgiliana 49, 46100 Mantova"
+        },
+        {
+          "name": "Pizzikotto",
+          "phone": "+39 0376 245716",
+          "address": "P.le Cesare Beccaria 1, 46100 Mantova"
+        },
+        {
+          "name": "Nostromo",
+          "phone": "+39 0376 391437",
+          "address": "Via Brescia 5, 46100 Mantova"
+        },
+        {
+          "name": "La grotta",
+          "phone": "+39 0376 387033",
+          "address": "Via A. Manzoni 48, 46047 Porto Mantovano (MN)"
+        },
+        {
+          "name": "Il golfo di Napoli",
+          "phone": "+39 0376 391435",
+          "address": "Strada Mantovanella 2, 46100 Mantova"
+        }
+      ]
+    },
+    {
+      "name": "Il pesce",
+      "slug": "pesce",
+      "items": [
+        {
+          "name": "Da Giannino",
+          "phone": "+39 0376 367582",
+          "address": "Via Leon d’Oro 6, 46100 Mantova"
+        },
+        {
+          "name": "Acquapazza",
+          "phone": "+39 0376 220891",
+          "address": "Viale Mons. L. Martini 1, Belfiore, 46100 Mantova"
+        },
+        {
+          "name": "Il quadrato",
+          "phone": "+39 0376 368896",
+          "address": "Piazza Virgiliana 49, 46100 Mantova"
+        }
+      ]
+    },
+    {
+      "name": "Agriturismo",
+      "slug": "agriturismo",
+      "items": [
+        {
+          "name": "Fenilnovo",
+          "phone": "+39 0376 442862",
+          "address": "Strada Cantarana 1, 46047 Porto Mantovano (MN)"
+        },
+        {
+          "name": "Corte Barco",
+          "phone": "+39 339 2226468",
+          "address": "Strada Barco 12, 46030 Bigarello (MN)"
+        },
+        {
+          "name": "Il galeotto",
+          "phone": "+39 0376 229165",
+          "address": "Via Prati 13, 46030 San Giorgio Bigarello (MN)"
+        },
+        {
+          "name": "Por a l’ora",
+          "phone": "+39 347 2938947",
+          "address": "Mantova e dintorni"
+        }
+      ]
+    }
+  ]
+}
