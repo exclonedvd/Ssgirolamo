@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta content="it_IT" property="og:locale"/>
+<meta content="en_US" property="og:locale:alternate"/>
+<meta content="de_DE" property="og:locale:alternate"/>
+<meta content="Agriturismo Corte San Girolamo" property="og:title"/>
+<meta content="Camere, colazioni ed esperienze autentiche a Mantova." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="assets/Home.jpg" property="og:image"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="light" name="color-scheme"/>
+<link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
+<link href="" id="canonical" rel="canonical"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Agriturismo Corte San Girolamo</title>
+<meta content="Sito ufficiale di Agriturismo Corte San Girolamo, B&amp;B a Mantova. Camere, colazioni, esperienze autentiche e natura." name="description"/>
+<link href="manifest.webmanifest" rel="manifest"/>
+<meta content="#2f5d3a" name="theme-color"/>
+<!-- iOS PWA -->
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<link href="assets/icons/icon-192.png" rel="apple-touch-icon"/>
+<link href="assets/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="assets/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link as="style" href="styles.css" rel="preload"/>
+<link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<link href="styles.css" rel="stylesheet"/>
+<script>(function(){try{var c=document.getElementById("canonical"); if(c){c.href=location.origin+location.pathname;}}catch(e){}})();</script>
+<style>
+.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.skip-link:focus{left:16px;top:16px;width:auto;height:auto;padding:8px 12px;border-radius:8px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.15);z-index:10000}
+</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BedAndBreakfast", "name": "Agriturismo Corte San Girolamo", "address": {"@type": "PostalAddress", "streetAddress": "Str. S. Girolamo, 1", "addressLocality": "Mantova", "postalCode": "46100", "addressCountry": "IT"}, "telephone": "+39 347 800 8505", "email": "info@cortesangirolamo.it", "url": "", "image": "assets/Home.jpg", "geo": {"@type": "GeoCoordinates", "latitude": 45.149, "longitude": 10.808}, "sameAs": ["https://www.instagram.com/cortesangirolamo/", "https://www.facebook.com/"]}</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Salta al contenuto</a>
+<div class="lang-switch" id="langSwitch"><button class="active" data-lang="it"><svg class="flag-svg" viewBox="0 0 18 12" aria-hidden="true">
+  <rect width="6" height="12" x="0" fill="#009246"/>
+  <rect width="6" height="12" x="6" fill="#F1F2F1"/>
+  <rect width="6" height="12" x="12" fill="#CE2B37"/>
+</svg><span class="lang-code">IT</span></button><button data-lang="en"><svg class="flag-svg" viewBox="0 0 18 12" aria-hidden="true">
+  <rect width="18" height="12" fill="#012169"/>
+  <path d="M0,0 L18,12 M18,0 L0,12" stroke="#FFFFFF" stroke-width="3"/>
+  <path d="M0,0 L18,12 M18,0 L0,12" stroke="#C8102E" stroke-width="1.5"/>
+  <rect x="7.5" y="0" width="3" height="12" fill="#FFFFFF"/>
+  <rect x="0" y="4.5" width="18" height="3" fill="#FFFFFF"/>
+  <rect x="8" y="0" width="2" height="12" fill="#C8102E"/>
+  <rect x="0" y="5" width="18" height="2" fill="#C8102E"/>
+</svg><span class="lang-code">EN</span></button><button data-lang="de"><svg class="flag-svg" viewBox="0 0 18 12" aria-hidden="true">
+  <rect width="18" height="4" y="0" fill="#000000"/>
+  <rect width="18" height="4" y="4" fill="#DD0000"/>
+  <rect width="18" height="4" y="8" fill="#FFCE00"/>
+</svg><span class="lang-code">DE</span></button></div>
+<button aria-controls="drawer" aria-expanded="false" aria-label="Apri menu" id="menuBtn"><span class="bar"></span></button>
+<aside aria-hidden="true" class="drawer" id="drawer">
+<header>Agriturismo Corte San Girolamo</header>
+<nav>
+<a data-emoji="rooms" data-i18n="nav_camere" href="#camere">Camere</a>
+<a data-emoji="breakfast" data-i18n="nav_colazioni" href="#colazioni">Colazioni / Ristoro</a>
+<a data-emoji="experiences" data-i18n="nav_esperienze" href="#esperienze">Esperienze</a>
+<a data-emoji="gallery" data-i18n="nav_galleria" href="#galleria">Galleria</a>
+<a data-emoji="map" data-i18n="nav_mappa" href="#mappa">Mappa</a>
+<a data-emoji="eat" data-i18n="nav_mangiare" href="#" id="navEat">Dove mangiare</a>
+<a data-emoji="do" data-i18n="nav_fare" href="#" id="navDo">Cosa fare</a>
+<a data-emoji="whatsapp" data-i18n="nav_whatsapp" href="#" id="navWhatsApp">WhatsApp</a>
+<a data-emoji="contact" data-i18n="nav_contatti" href="#contatti">Contatti</a>
+<a data-emoji="request" data-i18n="nav_prenotazioni" href="#booking">Richiesta disponibilità</a>
+</nav>
+<div class="social">
+<a aria-label="Instagram" href="https://www.instagram.com/cortesangirolamo/?igsh=MTByZDhoNjFrcnp6OA==" rel="noopener noreferrer" target="_blank"><svg height="22" viewbox="0 0 24 24" width="22"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm10 2H7a3 3 0 00-3 3v10a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3zm-5 3.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm5.8-.9a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2z" fill="currentColor"></path></svg></a>
+<a aria-label="Facebook" href="https://www.facebook.com/share/16ZMHcQUD4/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank"><svg height="22" viewbox="0 0 24 24" width="22"><path d="M13.5 22V12h3l.5-4h-3.5V6.1c0-1 .3-1.6 1.7-1.6H17V1.1C16.6 1 15.6 1 14.4 1 11.8 1 10 2.7 10 5.7V8H7v4h3v10h3.5z" fill="currentColor"></path></svg></a>
+
+</div>
+</aside>
+<header class="hero" style="background-image:url('assets/Home.jpg');">
+<img alt="Logo Agriturismo Corte San Girolamo" class="logo" decoding="async" height="256" loading="lazy" onerror="this.style.display='none'" src="assets/logo.jpg" width="256"/>
+<h1 class="brand-title">Agriturismo Corte San Girolamo</h1>
+</header>
+<main id="main">
+<section class="container" id="camere">
+<h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2>
+<div class="card">
+<p data-i18n="camere_text">Camere accoglienti in stile rurale mantovano, ognuna con bagno privato, aria condizionata e Wi‑Fi. Disponibili soluzioni per famiglie e ospiti business.</p>
+<div class="badge" data-i18n="camere_feat_rooms">🛏️ 10 camere</div>
+<div class="badge" data-i18n="camere_feat_wifi">📶 Wi‑Fi</div>
+<div class="badge" data-i18n="camere_feat_ac">❄️ Aria condizionata</div>
+<div class="badge" data-i18n="camere_feat_parking">🅿️ Parcheggio</div>
+<div class="badge" data-i18n="camere_feat_private_bath">🚿 Bagno privato</div><div class="badge" data-i18n="camere_feat_kettle">☕ Bollitore</div><div class="badge" data-i18n="camere_feat_shared_kitchen">🍳 Cucina comune</div><div class="badge" data-i18n="camere_feat_daily_clean">🧹 Pulizia giornaliera</div><div class="badge" data-i18n="camere_feat_flat_tv">📺 TV a schermo piatto</div><div class="badge" data-i18n="camere_feat_bike_rental">🚲 Noleggio biciclette (a pagamento)</div><div class="badge" data-i18n="camere_feat_accessible">♿ Alloggio accessibile a ospiti con disabilità</div></div>
+</section>
+<section class="container" id="colazioni">
+<h2 class="section-title" data-emoji="breakfast" data-i18n="colazioni_title">Colazioni / Ristoro</h2>
+<div class="grid cols-2">
+<div class="card"><p data-i18n="colazioni_text">colazione: La colazione  viene  servita  nella sala principale  dalle  ore 8.00  alle ore 9.30. in caso di orari diﬀerenti vi preghiamo di contattarci per potervi soddisfare. *A disposizione  e su richiesta  alimenti per celiaci,  vegani,  intolleranti lattosio. Animali:  Sono  ammessi  animali con un supplemento  giornaliero  di euro  5,00. *Non  è possibile  lasciare  gli animali da soli in camera salvo  autorizzazione  della  direzione.  Numeri  per emergenze:  Roberto  3489728124  Francesca  3471606708  Password  Wi-Fi: sangirolamo1  (*Tutto  minuscolo) Gentili  ospiti  siamo  lieti di mettere  a disposizione  per il vostro  soggiorno  una piccola  cucina  che si trova nella  porta  dopo  la camera  n°5. La stanza  è sempre  aperta  e potete usufruirne  H24. •Al suo interno  troverete •Microonde</p>
+<div aria-label="Mini galleria colazione" class="mini-gallery" id="mini-colazione"></div></div>
+<div class="card"><p data-i18n="ristoro_text">cucina comune. Su richiesta per soggiorni piu lunghi frigobar per camera. Orario  della  colazione: La colazione  viene  servita  nella sala principale  dalle  ore 8.00  alle ore 9.30. in caso di orari diﬀerenti vi preghiamo di contattarci per potervi soddisfare. *A disposizione  e su richiesta  alimenti per celiaci,  vegani,  intolleranti lattosio. Animali:  Sono  ammessi  animali con un supplemento  giornaliero  di euro  5,00. *Non  è possibile  lasciare  gli animali da soli in camera salvo  autorizzazione  della  direzione.  Numeri  per emergenze:  Roberto  3489728124  Francesca  3471606708  Password  Wi-Fi: sangirolamo1  (*Tutto  minuscolo) Gentili  ospiti  siamo  lieti di mettere  a disposizione  per il vostro  soggiorno  una piccola  cucina  che si trova nella  porta  dopo  la camera  n°5. La stanza  è sempre  aperta  e potete usufruirne  H24.</p>
+<div aria-label="Mini galleria degustazioni" class="mini-gallery" id="mini-degustazioni"></div></div>
+</div>
+</section>
+<section class="container" id="esperienze">
+<h2 class="section-title" data-emoji="experiences" data-i18n="esperienze_title">Esperienze</h2>
+<div class="card"><p data-i18n="esperienze_intro">attività delle api. Faremo una passeggiata nel bosco circostante per aver modo di osservare alcune delle ﬁoriture da cui le api raccolgono il nettare ed il polline, andremo poi a conoscere da vicino il superorganismo alveare incontrando l’ape regina con i fuchi e le operaie. Seguirà  una passeggiata  nel vicino  orto  a conduzione  naturale  con possibilità di raccolta  (secondo  stagione). Per info e prenotazione chiedere alla reception oppure contattare il numero 34780008505 Tagliere  misto: • Aﬀettati  locali • Formaggi • Giardiniera \ Verdure  di stagione  di nostra  produzione • Miele • Pane *Minimo  2 Persone  25,00  € Il servizio  è disponibile  ogni  sabato  e domenica  a pranzo  (da aprile  a ottobre) A disposizione  degli  ospiti  due tipologie  di biciclette: In dotazione  avete  un lucchetto,  uno spray  riparazione  forature  e fanalino  a intermittenza.</p></div>
+<div class="grid cols-3">
+<div class="card">
+<h3 data-i18n="apicoltura_title">Apicoltura</h3>
+<p data-i18n="apicoltura_text">miele: • 60 minuti  60,00 € Per info e prenotazioni  chiamare  al numero  3471606708 Oppure chiedere alle reception Disponibilità  tutti  i giorni  dalle  9:00  alle 21:00 I trattamenti  possono  essere  fatti in camera  oppure  nel parco. Vi accompagneremo  in un piccolo  tour  che vi permetterà  di avere  un’idea  di come  è struttura  l’attività delle api. Faremo una passeggiata nel bosco circostante per aver modo di osservare alcune delle ﬁoriture da cui le api raccolgono il nettare ed il polline, andremo poi a conoscere da vicino il superorganismo alveare incontrando l’ape regina con i fuchi e le operaie. Seguirà  una passeggiata  nel vicino  orto  a conduzione  naturale  con possibilità di raccolta  (secondo  stagione). Per info e prenotazione chiedere alla reception oppure contattare il numero 34780008505</p>
+<div aria-label="Mini galleria apicoltura" class="mini-gallery" id="mini-apicoltura"></div>
+</div>
+<div class="card">
+<h3 data-i18n="orto_title">Orto</h3>
+<p data-i18n="orto_text">orto  a conduzione  naturale  con possibilità di raccolta  (secondo  stagione). Per info e prenotazione chiedere alla reception oppure contattare il numero 34780008505 Tagliere  misto: • Aﬀettati  locali • Formaggi • Giardiniera \ Verdure  di stagione  di nostra  produzione • Miele • Pane *Minimo  2 Persone  25,00  € Il servizio  è disponibile  ogni  sabato  e domenica  a pranzo  (da aprile  a ottobre) A disposizione  degli  ospiti  due tipologie  di biciclette: In dotazione  avete  un lucchetto,  uno spray  riparazione  forature  e fanalino  a intermittenza. Su richiesta a disposizione seggiolino a caschetto per bambini. Gli orari di ritiro  bici sono  dalle  10:00  alle 16:00.  In caso  di orari  diﬀerenti  consultare  la direzione. La tradizione • Antica  osteria ai ranari 0376/328431 • Trattoria dell’oca 0376/327171</p>
+<div aria-label="Mini galleria orto" class="mini-gallery" id="mini-orto"></div>
+</div>
+<div class="card">
+<h3 data-i18n="massaggi_title">Massaggi</h3>
+<p data-i18n="massaggi_text">Massaggio  relax  con oli essenziali naturali: • 30 minuti  25,00 € • 50 minuti  45,00 € Massaggio  metamerico: • 50 minuti  40,00 € Scrub  al miele: • 60 minuti  60,00 € Per info e prenotazioni  chiamare  al numero  3471606708 Oppure chiedere alle reception Disponibilità  tutti  i giorni  dalle  9:00  alle 21:00 I trattamenti  possono  essere  fatti in camera  oppure  nel parco. Vi accompagneremo  in un piccolo  tour  che vi permetterà  di avere  un’idea  di come  è struttura  l’attività delle api. Faremo una passeggiata nel bosco circostante per aver modo di osservare alcune delle ﬁoriture da cui le api raccolgono il nettare ed il polline, andremo poi a conoscere da vicino il superorganismo alveare incontrando l’ape regina con i fuchi e le operaie. Seguirà  una passeggiata  nel vicino  orto  a conduzione  naturale  con possibilità di raccolta  (secondo  stagione).</p>
+<div aria-label="Mini galleria massaggi" class="mini-gallery" id="mini-massaggi"></div>
+</div>
+</div>
+</section>
+<section class="container" id="galleria">
+<h2 class="section-title" data-emoji="gallery" data-i18n="galleria_title">Galleria</h2>
+<div class="gallery" id="gallery"></div>
+</section>
+<section class="container" id="mappa">
+<h2 class="section-title" data-emoji="map" data-i18n="mappa_title">Mappa</h2>
+<div class="card">
+<p><svg height="20" viewbox="0 0 24 24" width="20"><path d="M9.5 3l5 2 5-2v18l-5 2-5-2-5 2V5l5-2zM9 5.3L6 6.5v12.2l3-1.2V5.3zm2 0v12.2l3 1.2V6.5l-3-1.2zm8 12.2V5.3l-3 1.2v12.2l3-1.2z" fill="currentColor"></path></svg> Str. S. Girolamo, 1, 46100 Mantova MN</p>
+<div style="aspect-ratio:16/9;">
+<iframe allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Str.+S.+Girolamo,+1,+46100+Mantova+MN&amp;output=embed" style="border:0;width:100%;height:100%;border-radius:12px" title="Mappa"></iframe>
+</div>
+</div>
+<div class="container" style="margin-top:16px">
+<div class="card">
+<h3 style="margin-top:0"><span data-i18n="eat_title" data-i18n="eat_title">Dove mangiare a Mantova 🍽️</span></h3>
+<p data-i18n="cta_open_map">Consulta la mappa dei ristoranti consigliati (per categoria) e apri il percorso su Google Maps o Apple Maps.</p>
+<button class="btn" id="eatOpen"><span data-i18n="eat_open_btn">Apri lista ristoranti</span></button>
+</div>
+</div>
+<div class="container" style="margin-top:16px">
+<div class="card">
+<h3 style="margin-top:0"><span data-i18n="do_title" data-i18n="do_title">Cosa fare a Mantova 🎒</span></h3>
+<p data-i18n="cta_open_list">Apri la lista delle cose da vedere, esperienze e escursioni consigliate.</p>
+<a class="btn" id="doOpen"><span data-i18n="do_open_btn">Apri lista attività</span></a>
+</div>
+</div>
+</section>
+<section class="container" id="contatti">
+<h2 class="section-title" data-emoji="contact" data-i18n="contatti_title">Contatti</h2>
+<div class="contact">
+<div class="card">
+<p><strong data-i18n="address_label">Indirizzo</strong>:<br/>Str. S. Girolamo, 1, 46100 Mantova MN</p>
+<p><strong data-i18n="phone_label">Telefono</strong>:<br/><a href="tel:+393478008505">347 800 8505</a></p>
+<p><strong data-i18n="social_label">Social</strong>:<br/>
+<a href="https://www.instagram.com/cortesangirolamo/?igsh=MTByZDhoNjFrcnp6OA==" rel="noopener noreferrer" target="_blank">Instagram</a> ·
+            <a href="https://www.facebook.com/share/16ZMHcQUD4/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
+</p>
+<a class="btn" href="tel:+393478008505"><svg aria-hidden="true" height="20" viewbox="0 0 24 24" width="20"><path d="M6.6 10.2a15.3 15.3 0 007.2 7.2l2.4-2.4a1 1 0 011.1-.2c1.2.5 2.5.8 3.8.8a1 1 0 011 1V21a1 1 0 01-1 1C10.6 22 2 13.4 2 3a1 1 0 011-1h3.4a1 1 0 011 1c0 1.3.3 2.6.8 3.8a1 1 0 01-.2 1.1L6.6 10.2z" fill="currentColor"></path></svg> <span data-i18n="call_now">Chiama ora</span></a>
+<a class="btn outline" data-i18n="whatsapp_button" id="waBtn">Scrivici su WhatsApp</a>
+</div>
+<div class="card">
+<p><strong>E‑mail:</strong><br/><a href="mailto:info@cortesangirolamo.it">info@cortesangirolamo.it</a></p>
+<p><strong>Orari check‑in/out:</strong><br/>Su richiesta. Contattaci per organizzare l’arrivo.</p>
+<p class="small" data-i18n="note_prices">* Evitiamo di pubblicare prezzi: per preventivi personalizzati scrivici o chiamaci.</p>
+</div>
+</div>
+</section>
+<section class="container" id="booking">
+<h2 class="section-title" data-emoji="request" data-i18n="booking_title">Richiesta disponibilità</h2>
+<div class="card">
+<form data-netlify="true" method="POST" name="booking" netlify-honeypot="bot-field">
+<input name="form-name" type="hidden" value="booking"/>
+<p style="display:none">
+<label>Don’t fill this out: <input name="bot-field"/></label>
+</p>
+<div class="inline">
+<div class="input"><label>Nome e cognome<input autocomplete="name" name="name" placeholder="Mario Rossi" required=""/></label></div>
+<div class="input"><label>Email<input autocomplete="email" name="email" placeholder="nome@email.com" required="" type="email"/></label></div>
+</div>
+<div class="inline">
+<div class="input"><label data-i18n="checkin_label">Check‑in</label><input name="checkin" required="" type="date"/></div>
+<div class="input"><label data-i18n="checkout_label">Check‑out</label><input name="checkout" required="" type="date"/></div>
+</div>
+<div class="inline">
+<div class="input"><label data-i18n="adults_label">Adulti</label><input min="1" name="adults" required="" type="number" value="2"/></div>
+<div class="input"><label data-i18n="children_label">Bambini</label><input min="0" name="children" type="number" value="0"/></div>
+</div>
+<div class="inline">
+<div class="input"><label data-i18n="rooms_label">Camere</label><input min="1" name="rooms" required="" type="number" value="1"/></div>
+<div class="input"><label>Telefono<input autocomplete="tel" name="phone" type="tel"/></label></div>
+</div>
+<div class="input"><label data-i18n="message_label">Messaggio</label><textarea name="message" placeholder="Esigenze particolari, orari, ecc."></textarea></div>
+<label class="input checkbox"><input name="consent" required="" type="checkbox"/> <span data-i18n="consent_label" data-i18n="gdpr_consent">Acconsento al trattamento dei dati ai sensi del GDPR</span></label>
+<div class="success" data-i18n="form_thanks" id="bookingSuccess">Grazie! La tua richiesta è stata inviata.</div>
+<div class="error" data-i18n="form_error" id="bookingError">Ops, qualcosa non ha funzionato. Riprova più tardi.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit"><span data-i18n="send_button">Invia richiesta</span></button></div>
+<small class="hint">Netlify Forms pronto. Per EmailJS, vedi README e configura le chiavi.</small>
+</form>
+</div>
+</section>
+</main>
+<footer>
+<div class="container">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+<div>© 2025 Agriturismo Corte San Girolamo — Tutti i diritti riservati</div>
+<div class="small">PWA installabile su Android e iOS</div>
+</div>
+</div>
+</footer>
+<script defer="" src="app.js"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<div aria-hidden="true" aria-modal="true" class="lightbox" id="lightbox" role="dialog">
+<button aria-label="Chiudi" class="controls close" id="lbClose">✕</button>
+<button aria-label="Precedente" class="prev" id="lbPrev">‹</button>
+<img alt="" id="lbImg" loading="lazy"/>
+<button aria-label="Successivo" class="next" id="lbNext">›</button>
+</div>
+<div aria-hidden="true" aria-modal="true" class="lightbox" id="eatOverlay" role="dialog">
+<button aria-label="Chiudi" class="controls close" id="eatClose">✕</button>
+<div class="card" style="width:min(1024px, 96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
+<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+<strong style="font-size:18px" data-i18n="eat_title">Dove mangiare a Mantova 🍽️</strong>
+</div>
+<div class="small" id="eatList" style="margin-top:10px"></div>
+</div>
+</div>
+<div aria-hidden="true" aria-modal="true" class="lightbox" id="doOverlay" role="dialog">
+<button aria-label="Chiudi" class="controls close" id="doClose">✕</button>
+<div class="card" style="width:min(1024px, 96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
+<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+<strong style="font-size:18px" data-i18n="do_title">Cosa fare a Mantova 🎒</strong>
+</div>
+<div class="small" id="doList" style="margin-top:10px"></div>
+</div>
+</div>
+<button <!--="" <script="" by="" class="controls close" emailjs="" enable="" optional="" sdk:="" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js" uncommenting="">
+  --&gt;
+
+
+<script>
+(function(){
+  // Update <html lang> if your i18n sets window.I18N.lang
+  try{
+    if (window.I18N && I18N.lang) { document.documentElement.setAttribute('lang', I18N.lang); }
+  }catch(e){}
+
+  // Keep aria-expanded in sync for menu button/drawer
+  var btn = document.getElementById('menuBtn');
+  var drawer = document.getElementById('drawer');
+  if(btn && drawer){
+    btn.addEventListener('click', function(){
+      var isHidden = drawer.getAttribute('aria-hidden') === 'true';
+      drawer.setAttribute('aria-hidden', String(!isHidden));
+      btn.setAttribute('aria-expanded', String(isHidden));
+    }, {capture: true});
+  }
+
+  // Lightbox: close on Escape if close() exists
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      var lb = document.getElementById('lightbox');
+      if(lb){
+        lb.setAttribute('aria-hidden','true');
+        if (typeof window.closeLightbox === 'function') { try{ window.closeLightbox(); }catch(_){} }
+      }
+    }
+  });
+
+  // Ensure all images have lazy/async (for images inserted dynamically after DOM ready)
+  function applyImgHints(root){
+    (root || document).querySelectorAll('img').forEach(function(img){
+      if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+      if(!img.hasAttribute('decoding')) img.setAttribute('decoding','async');
+    });
+  }
+  applyImgHints(document);
+  var mo = new MutationObserver(function(){
+    applyImgHints(document);
+  });
+  mo.observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
+</button></body>
+</html>
