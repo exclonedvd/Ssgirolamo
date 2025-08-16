@@ -1,10 +1,9 @@
-/* Planner ES5 v21:
-   - Logo agriturismo SOLO in prima pagina
-   - "Itinerario di <Nome>" e "Periodo" SOLO in prima pagina
-   - riga vuota tra periodo e meteo
-   - footer con numero pagina + data generazione
-   - attività extra dell'agriturismo (verde, massaggi, apicoltore)
-   - table layout con pill centrati (da v18)
+/* Planner ES5 v22:
+   - Logo/Head/Periodo solo PRIMA pagina (come v21)
+   - Footer pagina+data
+   - Attività agriturismo incluse
+   - Layout tabella con pill centrati
+   - NOVITÀ: icona mappa cliccabile per ogni riga (apre Google Maps con destinazione)
 */
 (function(){
   var ITZ='Europe/Rome';
@@ -25,8 +24,8 @@
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-v21')) return;
-    var s=document.createElement('style'); s.id='planner-css-v21';
+    if(document.getElementById('planner-css-v22')) return;
+    var s=document.createElement('style'); s.id='planner-css-v22';
     s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(s);
   }
@@ -58,6 +57,21 @@
   function drawRain(pdf,x,y){ drawCloud(pdf,x,y); pdf.setDrawColor(60,130,200); pdf.setLineWidth(0.7); pdf.line(x-2.5,y+3.8,x-3.2,y+5.8); pdf.line(x,y+3.8,x-0.7,y+5.8); pdf.line(x+2.5,y+3.8,x+1.8,y+5.8); }
   function drawPartly(pdf,x,y){ drawCloud(pdf,x+1,y); drawSun(pdf,x-3.8,y-1.2); }
   function drawIcon(pdf,type,x,y){ if(type==='sun') drawSun(pdf,x,y); else if(type==='partly') drawPartly(pdf,x,y); else if(type==='rain') drawRain(pdf,x,y); else drawCloud(pdf,x,y); }
+
+  // Map pin icon (vector)
+  function drawMapPin(pdf,x,y,size){
+    var r = size*0.5;
+    pdf.setDrawColor(60); pdf.setFillColor(220,40,50);
+    // pin body (circle + tail)
+    pdf.circle(x+r, y+r, r*0.66, 'F'); // head
+    pdf.triangle(x+r, y+r*0.4, x+r*1.6, y+size, x+r*0.4, y+size, 'F'); // tail
+    // inner hole
+    pdf.setFillColor(255); pdf.circle(x+r, y+r, r*0.28, 'F');
+  }
+  function mapsUrl(q){
+    q = (q||'').trim();
+    return 'https://www.google.com/maps/dir/?api=1&destination='+ encodeURIComponent(q);
+  }
 
   function getLogoDataUrl(){ return new Promise(function(resolve){ var img=new Image(); img.crossOrigin='anonymous'; img.onload=function(){ try{ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; var ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/jpeg',0.9)); }catch(e){ resolve(null); } }; img.onerror=function(){ resolve(null); }; img.src='assets/logo.jpg'; }); }
 
@@ -120,7 +134,8 @@
     var colPill = Math.min(36, Math.max(24, maxPillW + 6));
     var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
     var gap1=4, gap2=4;
-    var textMaxW = Math.max(40, cardW - (colPill + gap1 + colTime + gap2) - 6);
+    var ICON_W=5, ICON_GAP=3;
+    var textMaxW = Math.max(40, cardW - (colPill + gap1 + colTime + gap2) - 6 - (ICON_W + ICON_GAP));
     var gridX1 = x + colPill + gap1;
     var gridX2 = gridX1 + colTime + gap2;
 
@@ -149,15 +164,18 @@
       var top = centerY - pillH/2;
       var baseline = top + padY + fs*0.45;
 
+      // pill
       pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b);
       if(pdf.roundedRect){ pdf.roundedRect(x + (colPill - pillW)/2, top, pillW, pillH, 3, 3, 'F'); } else { pdf.rect(x + (colPill - pillW)/2, top, pillW, pillH, 'F'); }
       pdf.setTextColor(255); pdf.setFontSize(fs);
       pdf.text(rr.pill, x + (colPill - pdf.getTextWidth(rr.pill))/2, baseline);
 
+      // time
       pdf.setTextColor(0,0,0); pdf.setFontSize(10);
       var timeX = gridX1 + (colTime - pdf.getTextWidth(rr.time))/2;
       pdf.text(rr.time, timeX, baseline);
 
+      // text col
       pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
       var tx = gridX2 + 2;
       var contentY = rowTop + Math.max(4, (rowH - s.contentH)/2);
@@ -168,6 +186,14 @@
         pdf.setTextColor(0,0,0); pdf.setFontSize(10);
         var label='Tel: '+rr.tel; pdf.text(label, tx, y2 + 3.0);
         try{ var w=pdf.getTextWidth(label); if(pdf.link){ pdf.link(tx, y2-1, w, 6, { url:'tel:'+String(rr.tel).replace(/[^0-9+]/g,'') }); } }catch(e){}
+      }
+
+      // map icon at right side of text column (vertical center)
+      if(rr.q){
+        var iconX = gridX2 + 2 + textMaxW + ICON_GAP/2;
+        var iconY = centerY - (ICON_W/2);
+        drawMapPin(pdf, iconX, iconY, ICON_W);
+        try{ if(pdf.link){ pdf.link(iconX, iconY, ICON_W, ICON_W, { url: mapsUrl(rr.q) }); } }catch(e){}
       }
 
       cy += rowH;
@@ -203,7 +229,7 @@
         var meteo=arr[3]||[];
         var logo=arr[4];
 
-        // --- Agriturismo extras ---
+        // Extras agriturismo
         var extras=[
           {name:'Tempo nel verde', address:'Corte San Girolamo — relax tra i giardini e il parco'},
           {name:'Massaggi', address:'Corte San Girolamo — su richiesta'},
@@ -213,7 +239,7 @@
         prov   = (prov||[]).concat(extras);
         esc    = (esc||[]).concat(extras);
 
-        // Header (SOLO prima pagina)
+        // Header (first page only)
         pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
         pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
         pdf.line(MARGIN,12,pw-MARGIN,12);
@@ -222,9 +248,9 @@
         pdf.setFontSize(18); pdf.text('Itinerario di '+safe, MARGIN, 20);
         if(logo){ try{ var LOGO_SIZE=34; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE), 6, LOGO_SIZE, LOGO_SIZE); }catch(e){} }
         pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 28);
-        var y = 34 + 6; // riga vuota extra prima del meteo
+        var y = 34 + 6;
 
-        // Meteo strip (solo prima pagina)
+        // Meteo strip (first page only)
         if(meteo.length){
           pdf.setFontSize(10); pdf.setTextColor(0,0,0);
           var cols = meteo.length<5? meteo.length:5; var colW=(usableW)/cols;
@@ -247,15 +273,16 @@
           var pom = pick(esc.concat(vedere), used);
           var dinner = pick(food, used);
           function lineFor(it){ return (it.name||'') + (it.address? ' — '+it.address : ''); }
+          function queryFor(it){ var n=(it&&it.name)||''; var a=(it&&it.address)||''; var q=(n? n+' ': '') + a; return q.replace(/\s+/g,' ').trim(); }
 
           var rows=[
-            {pill:'Mattina', time:'09:00–12:30', text:lineFor(matt)},
-            {pill:'Pranzo', time:'12:30–14:30', text:lineFor(lunch), tel:lunch.phone||null},
-            {pill:'Pomeriggio', time:'15:00–19:00', text:lineFor(pom)},
-            {pill:'Sera', time:'19:30–22:30', text:lineFor(dinner), tel:dinner.phone||null}
+            {pill:'Mattina', time:'09:00–12:30', text:lineFor(matt), q:queryFor(matt)},
+            {pill:'Pranzo', time:'12:30–14:30', text:lineFor(lunch), tel:lunch.phone||null, q:queryFor(lunch)},
+            {pill:'Pomeriggio', time:'15:00–19:00', text:lineFor(pom), q:queryFor(pom)},
+            {pill:'Sera', time:'19:30–22:30', text:lineFor(dinner), tel:dinner.phone||null, q:queryFor(dinner)}
           ];
 
-          // Stima altezza card per salto pagina (coerente con layout tabella)
+          // estimate height consistent with table (remember icon eats width)
           var padX=3, padY=2, fs=10;
           var pills=['Mattina','Pranzo','Pomeriggio','Sera']; var maxPillW=0, i;
           for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
@@ -263,8 +290,8 @@
           for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
           var colPill = Math.min(36, Math.max(24, maxPillW + 6));
           var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
-          var gap1=4, gap2=4;
-          var textMaxW = Math.max(40, (cardW - (colPill + gap1 + colTime + gap2) - 6));
+          var gap1=4, gap2=4, ICON_W=5, ICON_GAP=3;
+          var textMaxW = Math.max(40, (cardW - (colPill + gap1 + colTime + gap2) - 6 - (ICON_W + ICON_GAP)));
           var totalH=0;
           pdf.setFontSize(11);
           for(i=0;i<rows.length;i++){
@@ -276,12 +303,11 @@
           var cardH = 14 + PADDING*2 + totalH;
 
           if(y + cardH > ph - 14){
-            // NUOVA PAGINA: niente logo, niente "Itinerario di", niente "Periodo", niente meteo
             pdf.addPage();
             pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
             pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
             pdf.line(MARGIN,12,pw-MARGIN,12);
-            y = 20; // subito contenuti
+            y = 20;
           }
 
           // draw card
@@ -299,7 +325,7 @@
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
-        // footer su ogni pagina
+        // footer on every page
         var total = pdf.getNumberOfPages();
         var stamp = genDateStr();
         for(var p=1; p<=total; p++){
