@@ -1,4 +1,11 @@
-/* Planner ES5 v19: header "Itinerario di <Nome>", extra gap before meteo, bigger logo, footer page/date */
+/* Planner ES5 v20:
+   - "Itinerario di <Nome>" e "Periodo" SOLO in prima pagina
+   - riga vuota tra periodo e meteo
+   - logo grande in alto dx
+   - footer con numero pagina + data generazione
+   - attività extra dell'agriturismo (verde, massaggi, apicoltore) incluse tra le proposte
+   - table layout stabile con pill centrati (da v18)
+*/
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
@@ -18,8 +25,8 @@
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-v19')) return;
-    var s=document.createElement('style'); s.id='planner-css-v19';
+    if(document.getElementById('planner-css-v20')) return;
+    var s=document.createElement('style'); s.id='planner-css-v20';
     s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(s);
   }
@@ -124,7 +131,7 @@
       var lines = wrapLines(pdf, r.text, textMaxW);
       var contentH = Math.max(LINE, lines.length*LINE) + (r.tel?LINE:0);
       var pillH = fs*0.45 + padY*2;
-      var rowH = Math.max(contentH, pillH) + 6; // più padding
+      var rowH = Math.max(contentH, pillH) + 6;
       sizes.push({lines:lines, h:rowH, contentH:contentH});
       total += rowH;
     }
@@ -187,6 +194,7 @@
         var pw=pdf.internal.pageSize.getWidth();
         var ph=pdf.internal.pageSize.getHeight();
         var usableW = pw - 2*MARGIN;
+        var firstPage = true;
 
         function itemsBySlug(cats, slug){ for(var i=0;i<cats.length;i++){ if(cats[i] && cats[i].slug===slug){ return cats[i].items || []; } } return []; }
         var vedere=itemsBySlug(arr[1].categories||[], 'vedere');
@@ -196,22 +204,29 @@
         var meteo=arr[3]||[];
         var logo=arr[4];
 
-        // Bg + header
+        // --- Agriturismo extras ---
+        var extras=[
+          {name:'Tempo nel verde', address:'Corte San Girolamo — relax tra i giardini e il parco'},
+          {name:'Massaggi', address:'Corte San Girolamo — su richiesta'},
+          {name:'Nei panni di un apicoltore', address:'Corte San Girolamo — laboratorio apistico'}
+        ];
+        // Aggiungo le esperienze dell’agriturismo alle proposte di "vedere/provare/escursioni"
+        vedere = (vedere||[]).concat(extras);
+        prov   = (prov||[]).concat(extras);
+        esc    = (esc||[]).concat(extras);
+
+        // Header (prima pagina)
         pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
         pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
         pdf.line(MARGIN,12,pw-MARGIN,12);
-        pdf.setTextColor(0,0,0);
-        pdf.setFontSize(18);
         var safe=capFirst((prefs.name||'Ospite').trim());
-        pdf.text('Itinerario di '+safe, MARGIN, 20);
-        // bigger logo top-right
-        if(logo){ try{ var LOGO_SIZE=32; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE), 6, LOGO_SIZE, LOGO_SIZE); }catch(e){} }
-        // Periodo
+        pdf.setTextColor(0,0,0);
+        pdf.setFontSize(18); pdf.text('Itinerario di '+safe, MARGIN, 20);
+        if(logo){ try{ var LOGO_SIZE=34; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE), 6, LOGO_SIZE, LOGO_SIZE); }catch(e){} }
         pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 28);
-        // extra blank line before weather icons to avoid overlaps
-        var y = 34 + 6; // 6mm extra gap
+        var y = 34 + 6; // riga vuota extra prima del meteo
 
-        // Meteo strip with icons
+        // Meteo strip (solo prima pagina)
         if(meteo.length){
           pdf.setFontSize(10); pdf.setTextColor(0,0,0);
           var cols = meteo.length<5? meteo.length:5; var colW=(usableW)/cols;
@@ -242,13 +257,12 @@
             {pill:'Sera', time:'19:30–22:30', text:lineFor(dinner), tel:dinner.phone||null}
           ];
 
-          // estimate total height
-          pdf.setFontSize(10);
-          var pills=['Mattina','Pranzo','Pomeriggio','Sera'];
-          var padX=3, padY=2, fs=10, maxPillW=0, i;
+          // Stima altezza card per salto pagina
+          var padX=3, padY=2, fs=10;
+          var pills=['Mattina','Pranzo','Pomeriggio','Sera']; var maxPillW=0, i;
           for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
-          var times=['09:00–12:30','12:30–14:30','15:00–19:00','19:30–22:30'];
-          var maxTimeW=0; for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
+          var times=['09:00–12:30','12:30–14:30','15:00–19:00','19:30–22:30']; var maxTimeW=0;
+          for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
           var colPill = Math.min(36, Math.max(24, maxPillW + 6));
           var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
           var gap1=4, gap2=4;
@@ -263,14 +277,14 @@
           }
           var cardH = 14 + PADDING*2 + totalH;
 
-          if(y + cardH > ph - 14){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); 
-            // redraw header (no meteo strip on subsequent pages)
+          if(y + cardH > ph - 14){
+            // nuova pagina: solo linea e logo, niente "Itinerario di" e niente "Periodo" e niente meteo
+            pdf.addPage(); firstPage=false;
+            pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
             pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
             pdf.line(MARGIN,12,pw-MARGIN,12);
-            pdf.setTextColor(0,0,0); pdf.setFontSize(18); pdf.text('Itinerario di '+safe, MARGIN, 20);
-            if(logo){ try{ var LOGO_SIZE2=32; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE2), 6, LOGO_SIZE2, LOGO_SIZE2); }catch(e){} }
-            pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 28);
-            y=34 + 6; // same gap before content
+            if(logo){ try{ var LOGO_SIZE2=28; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE2), 6, LOGO_SIZE2, LOGO_SIZE2); }catch(e){} }
+            y = 20; // subito contenuti
           }
 
           // draw card
@@ -279,9 +293,9 @@
           pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.5); pdf.line(MARGIN+2, y+9, MARGIN+cardW-2, y+9);
           pdf.setTextColor(0,0,0); pdf.setFontSize(13);
           pdf.text((di+1)+'. '+fmtDateCap(addDays(startISO,di)), MARGIN+PADDING, y+6);
-          var wd = meteo[di] || {}; drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
+          var wd = meteo[di] || {}; // icona meteo nella card (ok anche su pagine successive)
+          drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
 
-          // table
           var innerTop = y + 14;
           renderRowsTable(pdf, MARGIN+PADDING, innerTop, cardW - 2*PADDING, rows);
 
@@ -289,11 +303,10 @@
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
-        // footer: page number + generation date on every page
+        // footer su ogni pagina
         var total = pdf.getNumberOfPages();
         var stamp = genDateStr();
-        var p;
-        for(p=1; p<=total; p++){
+        for(var p=1; p<=total; p++){
           pdf.setPage(p);
           pdf.setTextColor(100); pdf.setFontSize(9);
           var footer='Pagina '+p+' di '+total+'  ·  Generato il '+stamp;
