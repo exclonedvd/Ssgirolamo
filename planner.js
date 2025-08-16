@@ -1,4 +1,4 @@
-/* Planner ES5 v17: table layout for pills to align with content; icons + big logo */
+/* Planner ES5 v18: table layout with centered pills, dynamic columns, safe wrapping, icons + big logo */
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
@@ -17,8 +17,8 @@
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-v17')) return;
-    var s=document.createElement('style'); s.id='planner-css-v17';
+    if(document.getElementById('planner-css-v18')) return;
+    var s=document.createElement('style'); s.id='planner-css-v18';
     s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(s);
   }
@@ -75,97 +75,113 @@
     return {name:name,days:days,interests:ints,start:start};
   }
 
-  function pillSize(pdf, label){
-    var fs=10, padX=3, padY=2;
-    pdf.setFontSize(fs);
-    var w = pdf.getTextWidth(label) + padX*2 + 2;
-    var h = fs*0.45 + padY*2;
-    return {w:w, h:h};
+  function textChunksNoSpaces(s, max){
+    var arr=[]; if(!s) return arr;
+    for(var i=0;i<s.length;i+=max){ arr.push(s.substr(i, max)); }
+    return arr;
   }
 
   function wrapLines(pdf, text, maxWidth){
     pdf.setLineHeightFactor(1.15);
-    try{ return pdf.splitTextToSize(String(text||''), maxWidth); }
-    catch(e){
-      var out=[], words=String(text||'').split(' '), cur='';
-      for(var i=0;i<words.length;i++){
-        var t=words[i], tmp=cur? (cur+' '+t):t;
-        try{ if(pdf.getTextWidth(tmp)>maxWidth && cur){ out.push(cur); cur=t; } else { cur=tmp; } }catch(_){ cur=tmp; }
+    text = String(text||'');
+    try{
+      var out = pdf.splitTextToSize(text, maxWidth);
+      // handle pathological long tokens (no spaces): force chunking
+      for(var i=0;i<out.length;i++){
+        if(pdf.getTextWidth(out[i])>maxWidth+0.5 && out[i].indexOf(' ')<0){
+          var chunks = textChunksNoSpaces(out[i], 22);
+          out.splice.apply(out,[i,1].concat(chunks));
+          i += chunks.length-1;
+        }
       }
-      if(cur) out.push(cur);
       return out;
+    }catch(e){
+      var words = text.replace(/([/\,-])/g,' $1 ').split(/\s+/);
+      var out2=[], cur='';
+      for(var j=0;j<words.length;j++){
+        var t=words[j], tmp=cur? (cur+' '+t):t;
+        try{ if(pdf.getTextWidth(tmp)>maxWidth && cur){ out2.push(cur); cur=t; } else { cur=tmp; } }catch(_){ cur=tmp; }
+      }
+      if(cur) out2.push(cur);
+      return out2;
     }
   }
 
-  function drawPill(pdf, x, baselineY, label){
-    var fs=10, padX=3, padY=2;
-    pdf.setFontSize(fs);
-    var w = pdf.getTextWidth(label) + padX*2 + 2;
-    var h = fs*0.45 + padY*2;
-    pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b);
-    if(pdf.roundedRect){ pdf.roundedRect(x, baselineY-h+padY, w, h, 3, 3, 'F'); } else { pdf.rect(x, baselineY-h+padY, w, h, 'F'); }
-    pdf.setTextColor(255); pdf.text(label, x+padX+1, baselineY);
-    return {w:w, h:h};
-  }
-
   function renderRowsTable(pdf, x, y, cardW, rows){
-    // column layout
-    var colPill = 22; // mm
-    var colTime = 24;
-    var textMaxW = cardW - 2 - colPill - colTime - 6; // inner padding and gaps
-    var gridX1 = x + colPill + 2;
-    var gridX2 = gridX1 + colTime + 2;
-    var cy = y;
+    // dynamic column widths from content
+    pdf.setFontSize(10);
+    var i;
+    var pills=['Mattina','Pranzo','Pomeriggio','Sera'];
+    var maxPillW=0, padX=3, padY=2, fs=10;
+    for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
+    var times=['09:00–12:30','12:30–14:30','15:00–19:00','19:30–22:30'];
+    var maxTimeW=0; for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
+    var colPill = Math.min(34, Math.max(24, maxPillW + 4)); // bounds
+    var colTime = Math.min(30, Math.max(22, maxTimeW + 6));
+    var gap1=3, gap2=3;
+    var textMaxW = Math.max(40, cardW - (colPill + gap1 + colTime + gap2) - 4);
+
+    var gridX1 = x + colPill + gap1;
+    var gridX2 = gridX1 + colTime + gap2;
 
     // precompute heights
-    var i, sizes=[], total=0;
+    var sizes=[], total=0;
     pdf.setFontSize(11);
     for(i=0;i<rows.length;i++){
       var r=rows[i];
       var lines = wrapLines(pdf, r.text, textMaxW);
-      var contentH = Math.max(LINE, lines.length*LINE) + (r.tel?LINE:0) + 3;
-      var pillH = pillSize(pdf, r.pill).h;
-      var rowH = Math.max(contentH, pillH) + 2;
-      sizes.push({lines:lines, h:rowH});
+      var contentH = Math.max(LINE, lines.length*LINE) + (r.tel?LINE:0);
+      var pillH = fs*0.45 + padY*2;
+      var rowH = Math.max(contentH, pillH) + 4; // extra padding
+      sizes.push({lines:lines, h:rowH, contentH:contentH});
       total += rowH;
     }
 
-    // draw vertical separators
+    // draw rows
+    var cy = y;
     pdf.setDrawColor(GRID.r,GRID.g,GRID.b); pdf.setLineWidth(0.2);
-    // for each row
     for(i=0;i<rows.length;i++){
       var rr = rows[i], s = sizes[i], rowTop = cy, rowH = s.h;
-      // optional row background
-      // separators
+      // column separators for row
       pdf.line(gridX1, rowTop+1, gridX1, rowTop+rowH-1);
       pdf.line(gridX2, rowTop+1, gridX2, rowTop+rowH-1);
 
-      // pill (baseline ~ top + 6)
-      var baseY = rowTop + 6;
-      drawPill(pdf, x+2, baseY, rr.pill);
+      // center baseline for pill & time
+      var centerY = rowTop + rowH/2;
+      var pillH = fs*0.45 + padY*2;
+      var top = centerY - pillH/2;
+      var baseline = top + padY + fs*0.45;
 
-      // time
+      // draw pill centered
+      pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b);
+      var pillW = Math.min(colPill-4, pdf.getTextWidth(rr.pill) + padX*2 + 2);
+      if(pdf.roundedRect){ pdf.roundedRect(x + (colPill - pillW)/2, top, pillW, pillH, 3, 3, 'F'); } else { pdf.rect(x + (colPill - pillW)/2, top, pillW, pillH, 'F'); }
+      pdf.setTextColor(255); pdf.setFontSize(fs);
+      pdf.text(rr.pill, x + (colPill - pdf.getTextWidth(rr.pill))/2, baseline);
+
+      // time centered on row
       pdf.setTextColor(0,0,0); pdf.setFontSize(10);
-      pdf.text(rr.time, gridX1 + 2, baseY);
+      var timeX = gridX1 + (colTime - pdf.getTextWidth(rr.time))/2;
+      pdf.text(rr.time, timeX, baseline);
 
-      // text block
+      // text block (kept inside col3, vertically centered)
       pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
       var tx = gridX2 + 2;
-      var ty = rowTop + 5;
-      for(var j=0;j<s.lines.length;j++){ pdf.text(s.lines[j], tx, ty + j*LINE); }
-      // tel link (if present)
+      var contentY = rowTop + Math.max(4, (rowH - s.contentH)/2);
+      var j;
+      for(j=0;j<s.lines.length;j++){ pdf.text(s.lines[j], tx, contentY + j*LINE); }
       if(rr.tel){
-        var y2 = ty + s.lines.length*LINE;
+        var y2 = contentY + s.lines.length*LINE + 1.2;
         pdf.setTextColor(0,0,0); pdf.setFontSize(10);
-        var label='Tel: '+rr.tel; pdf.text(label, tx, y2);
-        try{ var w=pdf.getTextWidth(label); if(pdf.link){ pdf.link(tx, y2-4.2, w, 5.6, { url:'tel:'+String(rr.tel).replace(/[^0-9+]/g,'') }); } }catch(e){}
+        var label='Tel: '+rr.tel; pdf.text(label, tx, y2 + 3.2);
+        try{ var w=pdf.getTextWidth(label); if(pdf.link){ pdf.link(tx, y2-1, w, 6, { url:'tel:'+String(rr.tel).replace(/[^0-9+]/g,'') }); } }catch(e){}
       }
 
       cy += rowH;
     }
 
-    // outer border for the table area (optional subtle)
-    pdf.setDrawColor(GRID.r,GRID.g,GRID.b); pdf.rect(x+1, y, cardW-2, total);
+    // subtle border around the table
+    pdf.setDrawColor(GRID.r,GRID.g,GRID.b); pdf.rect(x+0.5, y, cardW-1, total);
 
     return total;
   }
@@ -227,10 +243,8 @@
           var lunch = pick(food, used);
           var pom = pick(esc.concat(vedere), used);
           var dinner = pick(food, used);
-
           function lineFor(it){ return (it.name||'') + (it.address? ' — '+it.address : ''); }
 
-          // Prepare rows
           var rows=[
             {pill:'Mattina', time:'09:00–12:30', text:lineFor(matt)},
             {pill:'Pranzo', time:'12:30–14:30', text:lineFor(lunch), tel:lunch.phone||null},
@@ -238,34 +252,41 @@
             {pill:'Sera', time:'19:30–22:30', text:lineFor(dinner), tel:dinner.phone||null}
           ];
 
-          // Estimate total height of table
-          var tmpH = renderRowsTable(pdf, -1000, -1000, cardW, rows); // dummy off-canvas to compute? We can't draw off-canvas; instead estimate quickly
-          // Instead of fake render, re-compute heights inline (no drawing)
-          var colPill=22, colTime=24, textMaxW = cardW - 2 - colPill - colTime - 6;
-          var totalH=0, i;
+          // estimate total height to decide page break
+          // we recompute same as in renderRowsTable to keep consistent
+          pdf.setFontSize(10);
+          var pills=['Mattina','Pranzo','Pomeriggio','Sera'];
+          var padX=3, padY=2, fs=10, maxPillW=0, i;
+          for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
+          var times=['09:00–12:30','12:30–14:30','15:00–19:00','19:30–22:30'];
+          var maxTimeW=0; for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
+          var colPill = Math.min(34, Math.max(24, maxPillW + 4));
+          var colTime = Math.min(30, Math.max(22, maxTimeW + 6));
+          var gap1=3, gap2=3;
+          var textMaxW = Math.max(40, (cardW - (colPill + gap1 + colTime + gap2) - 4));
+          var totalH=0;
           pdf.setFontSize(11);
           for(i=0;i<rows.length;i++){
             var ls = wrapLines(pdf, rows[i].text, textMaxW);
-            var contentH = Math.max(LINE, ls.length*LINE) + (rows[i].tel?LINE:0) + 3;
-            var pillH = pillSize(pdf, rows[i].pill).h;
-            totalH += Math.max(contentH, pillH) + 2;
+            var contentH = Math.max(LINE, ls.length*LINE) + (rows[i].tel?LINE:0);
+            var pillH = fs*0.45 + padY*2;
+            totalH += Math.max(contentH, pillH) + 4;
           }
-          var cardH = 14 + PADDING*2 + totalH; // header row + padding
+          var cardH = 14 + PADDING*2 + totalH;
 
           if(y + cardH > ph - 12){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); y=12; }
 
-          // Card box
+          // draw card
           pdf.setDrawColor(220); pdf.setFillColor(CARD_BG.r,CARD_BG.g,CARD_BG.b);
           if(pdf.roundedRect){ pdf.roundedRect(MARGIN,y,cardW,cardH,3,3,'FD'); } else { pdf.rect(MARGIN,y,cardW,cardH,'FD'); }
-          // Title
           pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.5); pdf.line(MARGIN+2, y+9, MARGIN+cardW-2, y+9);
           pdf.setTextColor(0,0,0); pdf.setFontSize(13);
           pdf.text((di+1)+'. '+fmtDateCap(addDays(startISO,di)), MARGIN+PADDING, y+6);
           var wd = meteo[di] || {}; drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
 
-          // Table inside card
+          // render table content
           var innerTop = y + 14;
-          var usedH = renderRowsTable(pdf, MARGIN+PADDING, innerTop, cardW - 2*PADDING, rows);
+          renderRowsTable(pdf, MARGIN+PADDING, innerTop, cardW - 2*PADDING, rows);
 
           y += cardH + GAP;
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
