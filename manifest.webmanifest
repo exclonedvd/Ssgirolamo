@@ -1,9 +1,9 @@
 {
   "name": "Agriturismo Corte San Girolamo",
   "short_name": "San Girolamo",
-  "id": "/",
-  "start_url": "/",
-  "scope": "/",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2f5d3a",
