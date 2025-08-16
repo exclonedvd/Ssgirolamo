@@ -15,6 +15,7 @@
     var isAppleTouch = /Mac/i.test(ua) && ('ontouchend' in document);
     return iOS || isAppleTouch;
   }
+
   function capFirst(s){
     var t = (s == null ? '' : String(s));
     if(!t) return '';
@@ -223,7 +224,7 @@
     holder.style.position='fixed'; holder.style.left='-10000px'; holder.style.top='0'; holder.style.zIndex='-1';
     holder.innerHTML = html; document.body.appendChild(holder);
     var node = holder.querySelector('.pdf-root') || holder;
-    return window.html2canvas(node, {scale: (isIOSMobile()?1:2), useCORS:true, imageTimeout:15000, backgroundColor: BRAND_BG_HEX})
+    return window.html2canvas(node, {scale:(isIOSMobile()?1:2), useCORS:true, imageTimeout:15000, backgroundColor: BRAND_BG_HEX})
       .then(function(canvas){ holder.remove(); return canvas; })
       .catch(function(err){ holder.remove(); throw err; });
   }
@@ -319,6 +320,8 @@
   }
 
   function generatePDF(ev){
+  try{
+
     if(ev){ ev.preventDefault(); ev.stopPropagation(); }
     var btn = document.getElementById('plannerGenerate'); if(btn){ btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
 
@@ -341,34 +344,21 @@
 
           pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX));
 
-          
-if(isIOSMobile()){
+          return Promise.resolve().then(function(){
             PlannerProgress.step('Impagino intestazione…');
+                        PlannerProgress.step('Impagino intestazione…');
             var y = 0, w = pageWidth;
-            // Vector header (no html2canvas on iOS)
             try{
-              pdf.setFontSize(18);
+              var acc = hexToRgb(ACCENT_HEX);
+              pdf.setFillColor(acc.r, acc.g, acc.b); pdf.rect(0,0,w,8,'F');
               pdf.setTextColor(0,0,0);
-              pdf.text('Itinerario personalizzato', 12, 16);
-              pdf.setFontSize(12);
-              var who = (prefs.name||'Ospite').trim();
-              pdf.text('Per: ' + (who?who:'Ospite'), 12, 24);
-              pdf.setFontSize(10);
-              pdf.setTextColor(60);
-              pdf.text('Generato automaticamente in base a meteo e interessi', 12, 30);
-              // Divider
-              pdf.setDrawColor(200);
-              pdf.line(12, 34, pageWidth-12, 34);
-            }catch(_){}
-            var h = 36; // header block height
-            y += h + 2;
-          } else {
-            return htmlToCanvas(buildHeaderHTML(prefs.name, meteo)).then(function(headerCanvas){
-              PlannerProgress.step('Impagino intestazione…');
-              var y = 0, w = pageWidth, h = (headerCanvas.height * w) / Math.max(1, headerCanvas.width);
-              try{ pdf.addImage(headerCanvas, IMG_FMT, 0, y, w, h, undefined, 'FAST'); }catch(e){ pdf.addImage(TO_DATAURL(headerCanvas), IMG_FMT, 0, y, w, h, undefined, 'FAST'); }
-              y += h + 4;
-          });
+              pdf.setFontSize(18);
+              var safe = capFirst((prefs.name||'Ospite').trim());
+              pdf.text('Itinerario per '+safe, 8, 18);
+              pdf.setFontSize(11);
+              pdf.text('Periodo: '+fmtDateCap(start)+' – '+fmtDateCap(end), 8, 25);
+            }catch(e){ console.error('Header draw', e); }
+            y = 30;
 var used = {};
             var seq = Promise.resolve();
             for(let i=0;i<prefs.days;i++){
@@ -380,7 +370,7 @@ var used = {};
                   return htmlToCanvas(buildDayHTML(day)).then(function(cardCanvas){
                     var cW = pageWidth, cH = (cardCanvas.height * cW) / Math.max(1, cardCanvas.width);
                     if(y + cH > pageHeight){ pdf.addPage(); pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX)); y = 0; }
-                    pdf.addImage(cardCanvas.toDataURL('image/png'), IMG_FMT, 0, y, cW, cH);
+                    try{ pdf.addImage(cardCanvas, IMG_FMT, 0, y, cW, cH, undefined, 'FAST'); }catch(e){ pdf.addImage(TO_DATAURL(cardCanvas), IMG_FMT, 0, y, cW, cH, undefined, 'FAST'); }
                     y += cH + 4;
                     PlannerProgress.step('Giorno '+(idx+1)+'/'+prefs.days+'…');
                   });
@@ -408,7 +398,13 @@ var used = {};
     }).finally(function(){
       if(btn){ btn.disabled = false; btn.removeAttribute('aria-busy'); }
     });
+  }catch(err){
+    console.error(err);
+    try{ PlannerProgress.error('Errore'); }catch(_){}
+    alert('Errore PDF: ' + (err && err.message ? err.message : err));
+    var btn = document.getElementById('plannerGenerate'); if(btn){ btn.disabled = false; btn.removeAttribute('aria-busy'); }
   }
+
 
   // ------------------ WIRING ------------------
   function attachHandlers(){
