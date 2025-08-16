@@ -1,4 +1,4 @@
-/* Planner ES5 v18: table layout with centered pills, dynamic columns, safe wrapping, icons + big logo */
+/* Planner ES5 v19: header "Itinerario di <Nome>", extra gap before meteo, bigger logo, footer page/date */
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
@@ -12,19 +12,20 @@
   function todayISO(){ return new Date().toLocaleDateString('en-CA',{timeZone:ITZ}); }
   function addDays(iso,n){ var d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toLocaleDateString('en-CA',{timeZone:ITZ}); }
   function fmtDateCap(iso){ try{var d=new Date(iso+'T00:00:00'); var s=d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long'}); return s.replace(/^./, function(c){return c.toUpperCase();}); }catch(e){return iso;} }
+  function genDateStr(){ try{ return new Date().toLocaleString('it-IT',{timeZone:ITZ,day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ var d=new Date(); return d.toISOString().slice(0,16).replace('T',' ');} }
 
   function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src; s.async=true; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-v18')) return;
-    var s=document.createElement('style'); s.id='planner-css-v18';
+    if(document.getElementById('planner-css-v19')) return;
+    var s=document.createElement('style'); s.id='planner-css-v19';
     s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(s);
   }
 
   var Progress={ _ui:null,_cur:0,_tot:1,
-    _ensure:function(){ injectCSS(); if(this._ui) return this._ui; var w=document.createElement('div'); w.id='planner-progress'; w.innerHTML='<div class="box"><div class="head"><div class="spinner"></div><div class="label">Preparazione…</div></div><div class="bar"><i></i></div></div>'; document.body.appendChild(w); this._ui={wrap:w,bar:w.querySelector('.bar i'),label:w.querySelector('.label')}; return this._ui; },
+    _ensure:function(){ injectCSS(); if(this._ui) return this._ui; var w=document.createElement('div'); w.id='planner-progress'; w.innerHTML='<div class=\"box\"><div class=\"head\"><div class=\"spinner\"></div><div class=\"label\">Preparazione…</div></div><div class=\"bar\"><i></i></div></div>'; document.body.appendChild(w); this._ui={wrap:w,bar:w.querySelector('.bar i'),label:w.querySelector('.label')}; return this._ui; },
     init:function(t){ this._ensure(); this._tot=Math.max(1,t||1); this._cur=0; this._render('Preparazione…',0); },
     _render:function(l,n){ var ui=this._ensure(); var pct=Math.round(100*(n/Math.max(1,this._tot))); ui.bar.style.width=pct+'%'; if(l) ui.label.textContent=l; },
     start:function(l){ this._ensure().wrap.classList.add('open'); this._cur=0; this._render(l||'Avvio…',0); },
@@ -67,7 +68,7 @@
     var fd=new FormData(form);
     var name=capFirst(String(fd.get('name')||''));
     var days=Math.max(1, Math.min(7, parseInt(fd.get('days')||'3',10)));
-    var inputs=form.querySelectorAll('input[name="interests"]:checked');
+    var inputs=form.querySelectorAll('input[name=\"interests\"]:checked');
     var ints=[]; for(var i=0;i<inputs.length;i++){ ints.push(inputs[i].value); }
     var sd=document.getElementById('plannerStartDate');
     var start=(sd && sd.value) || todayISO();
@@ -75,28 +76,22 @@
     return {name:name,days:days,interests:ints,start:start};
   }
 
-  function textChunksNoSpaces(s, max){
-    var arr=[]; if(!s) return arr;
-    for(var i=0;i<s.length;i+=max){ arr.push(s.substr(i, max)); }
-    return arr;
-  }
-
+  function textChunksNoSpaces(s, max){ var arr=[]; if(!s) return arr; for(var i=0;i<s.length;i+=max){ arr.push(s.substr(i, max)); } return arr; }
   function wrapLines(pdf, text, maxWidth){
     pdf.setLineHeightFactor(1.15);
     text = String(text||'');
     try{
       var out = pdf.splitTextToSize(text, maxWidth);
-      // handle pathological long tokens (no spaces): force chunking
       for(var i=0;i<out.length;i++){
         if(pdf.getTextWidth(out[i])>maxWidth+0.5 && out[i].indexOf(' ')<0){
           var chunks = textChunksNoSpaces(out[i], 22);
-          out.splice.apply(out,[i,1].concat(chunks));
+          Array.prototype.splice.apply(out,[i,1].concat(chunks));
           i += chunks.length-1;
         }
       }
       return out;
     }catch(e){
-      var words = text.replace(/([/\,-])/g,' $1 ').split(/\s+/);
+      var words = text.replace(/([/\\,-])/g,' $1 ').split(/\s+/);
       var out2=[], cur='';
       for(var j=0;j<words.length;j++){
         var t=words[j], tmp=cur? (cur+' '+t):t;
@@ -108,7 +103,6 @@
   }
 
   function renderRowsTable(pdf, x, y, cardW, rows){
-    // dynamic column widths from content
     pdf.setFontSize(10);
     var i;
     var pills=['Mattina','Pranzo','Pomeriggio','Sera'];
@@ -116,15 +110,13 @@
     for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
     var times=['09:00–12:30','12:30–14:30','15:00–19:00','19:30–22:30'];
     var maxTimeW=0; for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
-    var colPill = Math.min(34, Math.max(24, maxPillW + 4)); // bounds
-    var colTime = Math.min(30, Math.max(22, maxTimeW + 6));
-    var gap1=3, gap2=3;
-    var textMaxW = Math.max(40, cardW - (colPill + gap1 + colTime + gap2) - 4);
-
+    var colPill = Math.min(36, Math.max(24, maxPillW + 6));
+    var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
+    var gap1=4, gap2=4;
+    var textMaxW = Math.max(40, cardW - (colPill + gap1 + colTime + gap2) - 6);
     var gridX1 = x + colPill + gap1;
     var gridX2 = gridX1 + colTime + gap2;
 
-    // precompute heights
     var sizes=[], total=0;
     pdf.setFontSize(11);
     for(i=0;i<rows.length;i++){
@@ -132,57 +124,49 @@
       var lines = wrapLines(pdf, r.text, textMaxW);
       var contentH = Math.max(LINE, lines.length*LINE) + (r.tel?LINE:0);
       var pillH = fs*0.45 + padY*2;
-      var rowH = Math.max(contentH, pillH) + 4; // extra padding
+      var rowH = Math.max(contentH, pillH) + 6; // più padding
       sizes.push({lines:lines, h:rowH, contentH:contentH});
       total += rowH;
     }
 
-    // draw rows
     var cy = y;
     pdf.setDrawColor(GRID.r,GRID.g,GRID.b); pdf.setLineWidth(0.2);
     for(i=0;i<rows.length;i++){
       var rr = rows[i], s = sizes[i], rowTop = cy, rowH = s.h;
-      // column separators for row
       pdf.line(gridX1, rowTop+1, gridX1, rowTop+rowH-1);
       pdf.line(gridX2, rowTop+1, gridX2, rowTop+rowH-1);
 
-      // center baseline for pill & time
       var centerY = rowTop + rowH/2;
       var pillH = fs*0.45 + padY*2;
+      var pillW = Math.min(colPill-6, pdf.getTextWidth(rr.pill) + padX*2 + 2);
       var top = centerY - pillH/2;
       var baseline = top + padY + fs*0.45;
 
-      // draw pill centered
       pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b);
-      var pillW = Math.min(colPill-4, pdf.getTextWidth(rr.pill) + padX*2 + 2);
       if(pdf.roundedRect){ pdf.roundedRect(x + (colPill - pillW)/2, top, pillW, pillH, 3, 3, 'F'); } else { pdf.rect(x + (colPill - pillW)/2, top, pillW, pillH, 'F'); }
       pdf.setTextColor(255); pdf.setFontSize(fs);
       pdf.text(rr.pill, x + (colPill - pdf.getTextWidth(rr.pill))/2, baseline);
 
-      // time centered on row
       pdf.setTextColor(0,0,0); pdf.setFontSize(10);
       var timeX = gridX1 + (colTime - pdf.getTextWidth(rr.time))/2;
       pdf.text(rr.time, timeX, baseline);
 
-      // text block (kept inside col3, vertically centered)
       pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
       var tx = gridX2 + 2;
       var contentY = rowTop + Math.max(4, (rowH - s.contentH)/2);
       var j;
       for(j=0;j<s.lines.length;j++){ pdf.text(s.lines[j], tx, contentY + j*LINE); }
       if(rr.tel){
-        var y2 = contentY + s.lines.length*LINE + 1.2;
+        var y2 = contentY + s.lines.length*LINE + 1.5;
         pdf.setTextColor(0,0,0); pdf.setFontSize(10);
-        var label='Tel: '+rr.tel; pdf.text(label, tx, y2 + 3.2);
+        var label='Tel: '+rr.tel; pdf.text(label, tx, y2 + 3.0);
         try{ var w=pdf.getTextWidth(label); if(pdf.link){ pdf.link(tx, y2-1, w, 6, { url:'tel:'+String(rr.tel).replace(/[^0-9+]/g,'') }); } }catch(e){}
       }
 
       cy += rowH;
     }
 
-    // subtle border around the table
     pdf.setDrawColor(GRID.r,GRID.g,GRID.b); pdf.rect(x+0.5, y, cardW-1, total);
-
     return total;
   }
 
@@ -214,16 +198,22 @@
 
         // Bg + header
         pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
-        var y=12; pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
+        pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
         pdf.line(MARGIN,12,pw-MARGIN,12);
         pdf.setTextColor(0,0,0);
-        pdf.setFontSize(18); var safe=capFirst((prefs.name||'Ospite').trim()); pdf.text(safe, MARGIN+30, 20);
-        if(logo){ try{ pdf.addImage(logo,'JPEG', pw-34, 8, 26, 26); }catch(e){} }
-        pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 26);
+        pdf.setFontSize(18);
+        var safe=capFirst((prefs.name||'Ospite').trim());
+        pdf.text('Itinerario di '+safe, MARGIN, 20);
+        // bigger logo top-right
+        if(logo){ try{ var LOGO_SIZE=32; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE), 6, LOGO_SIZE, LOGO_SIZE); }catch(e){} }
+        // Periodo
+        pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 28);
+        // extra blank line before weather icons to avoid overlaps
+        var y = 34 + 6; // 6mm extra gap
 
         // Meteo strip with icons
         if(meteo.length){
-          y=32; pdf.setFontSize(10); pdf.setTextColor(0,0,0);
+          pdf.setFontSize(10); pdf.setTextColor(0,0,0);
           var cols = meteo.length<5? meteo.length:5; var colW=(usableW)/cols;
           for(var mi=0; mi<cols; mi++){
             var d=meteo[mi], x=MARGIN + mi*colW;
@@ -234,7 +224,7 @@
             pdf.text(fmtDateCap(d.date), x, y+10);
           }
           y+=18;
-        }else{ y=34; }
+        }
 
         var used={};
         var cardW=usableW;
@@ -252,29 +242,36 @@
             {pill:'Sera', time:'19:30–22:30', text:lineFor(dinner), tel:dinner.phone||null}
           ];
 
-          // estimate total height to decide page break
-          // we recompute same as in renderRowsTable to keep consistent
+          // estimate total height
           pdf.setFontSize(10);
           var pills=['Mattina','Pranzo','Pomeriggio','Sera'];
           var padX=3, padY=2, fs=10, maxPillW=0, i;
           for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
           var times=['09:00–12:30','12:30–14:30','15:00–19:00','19:30–22:30'];
           var maxTimeW=0; for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
-          var colPill = Math.min(34, Math.max(24, maxPillW + 4));
-          var colTime = Math.min(30, Math.max(22, maxTimeW + 6));
-          var gap1=3, gap2=3;
-          var textMaxW = Math.max(40, (cardW - (colPill + gap1 + colTime + gap2) - 4));
+          var colPill = Math.min(36, Math.max(24, maxPillW + 6));
+          var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
+          var gap1=4, gap2=4;
+          var textMaxW = Math.max(40, (cardW - (colPill + gap1 + colTime + gap2) - 6));
           var totalH=0;
           pdf.setFontSize(11);
           for(i=0;i<rows.length;i++){
             var ls = wrapLines(pdf, rows[i].text, textMaxW);
             var contentH = Math.max(LINE, ls.length*LINE) + (rows[i].tel?LINE:0);
             var pillH = fs*0.45 + padY*2;
-            totalH += Math.max(contentH, pillH) + 4;
+            totalH += Math.max(contentH, pillH) + 6;
           }
           var cardH = 14 + PADDING*2 + totalH;
 
-          if(y + cardH > ph - 12){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); y=12; }
+          if(y + cardH > ph - 14){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); 
+            // redraw header (no meteo strip on subsequent pages)
+            pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
+            pdf.line(MARGIN,12,pw-MARGIN,12);
+            pdf.setTextColor(0,0,0); pdf.setFontSize(18); pdf.text('Itinerario di '+safe, MARGIN, 20);
+            if(logo){ try{ var LOGO_SIZE2=32; pdf.addImage(logo,'JPEG', pw-(MARGIN+LOGO_SIZE2), 6, LOGO_SIZE2, LOGO_SIZE2); }catch(e){} }
+            pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 28);
+            y=34 + 6; // same gap before content
+          }
 
           // draw card
           pdf.setDrawColor(220); pdf.setFillColor(CARD_BG.r,CARD_BG.g,CARD_BG.b);
@@ -284,7 +281,7 @@
           pdf.text((di+1)+'. '+fmtDateCap(addDays(startISO,di)), MARGIN+PADDING, y+6);
           var wd = meteo[di] || {}; drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
 
-          // render table content
+          // table
           var innerTop = y + 14;
           renderRowsTable(pdf, MARGIN+PADDING, innerTop, cardW - 2*PADDING, rows);
 
@@ -292,8 +289,19 @@
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
+        // footer: page number + generation date on every page
+        var total = pdf.getNumberOfPages();
+        var stamp = genDateStr();
+        var p;
+        for(p=1; p<=total; p++){
+          pdf.setPage(p);
+          pdf.setTextColor(100); pdf.setFontSize(9);
+          var footer='Pagina '+p+' di '+total+'  ·  Generato il '+stamp;
+          pdf.text(footer, MARGIN, ph-6);
+        }
+
         Progress.step('Salvataggio…');
-        var fname='Itinerario_'+(prefs.name||'Ospite').replace(/[^a-z0-9-_]+/gi,'_')+'_'+startISO+'_'+prefs.days+'gg.pdf';
+        var fname='Itinerario_'+(safe||'Ospite').replace(/[^a-z0-9-_]+/gi,'_')+'_'+startISO+'_'+prefs.days+'gg.pdf';
         pdf.save(fname);
         Progress.finish();
       }).catch(function(err){
