@@ -1,11 +1,11 @@
-/* Planner ES5 mobile-safe: pills + tel, save/share panel, robust fallbacks (v15) */
+/* Planner ES5 v16: pill overlap fix + weather icons + bigger logo */
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
   var ACCENT={r:43,g:90,b:68};
   var CARD_BG={r:255,g:255,b:255};
   var TEXT_MUTED={r:60,g:60,b:60};
-  var MARGIN=8, GAP=6, PADDING=6, LINE=5.4;
+  var MARGIN=8, GAP=6, PADDING=6, LINE=5.8; // slightly higher line for spacing
 
   function capFirst(s){ var t=(s==null?'':String(s)); return t ? t.charAt(0).toLocaleUpperCase('it-IT') + t.slice(1) : ''; }
   function todayISO(){ return new Date().toLocaleDateString('en-CA',{timeZone:ITZ}); }
@@ -16,8 +16,8 @@
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-es5')) return;
-    var s=document.createElement('style'); s.id='planner-css-es5';
+    if(document.getElementById('planner-css-es5v16')) return;
+    var s=document.createElement('style'); s.id='planner-css-es5v16';
     s.textContent=[
       "#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}",
       "#planner-progress.open{display:flex}",
@@ -28,14 +28,6 @@
       "#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}",
       "#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}",
       "@keyframes spin{to{transform:rotate(360deg)}}",
-      "#planner-actions{position:fixed;left:0;right:0;bottom:0;transform:translateY(100%);transition:.25s ease;z-index:100000;font:500 14px system-ui,-apple-system,Segoe UI,Roboto}",
-      "#planner-actions.open{transform:translateY(0)}",
-      "#planner-actions .sheet{background:#fff;border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -6px 24px rgba(0,0,0,.25);padding:12px}",
-      "#planner-actions .sheet h4{margin:4px 8px 12px;font-size:16px}",
-      "#planner-actions .row{display:flex;gap:10px;justify-content:space-between}",
-      "#planner-actions button{flex:1;padding:12px;border-radius:10px;border:0;background:#2b5a44;color:#fff}",
-      "#planner-actions button.secondary{background:#e6eee9;color:#2b5a44}",
-      "#planner-actions .close{margin-top:10px;display:block;width:100%;padding:10px;border:0;background:#f0f0f0;border-radius:10px}",
       "#planner-toast{position:fixed;right:8px;bottom:8px;background:#2b5a44;color:#fff;padding:6px 10px;border-radius:10px;z-index:99999;font:600 12px system-ui}"
     ].join("");
     document.head.appendChild(s);
@@ -61,6 +53,17 @@
       .catch(function(){ return []; });
   }
 
+  // Weather icons (vector)
+  function iconType(wcode){ if(wcode==null) return 'na'; if(wcode===0 || wcode===1) return 'sun'; if(wcode===2 || wcode===3) return 'partly'; if(wcode===61 || wcode===63 || wcode===65 || wcode===80 || wcode===81 || wcode===82 || wcode===51 || wcode===53 || wcode===55) return 'rain'; return 'cloud'; }
+  function drawSun(pdf,x,y){ pdf.setFillColor(255,191,0); pdf.circle(x,y,3,'F'); pdf.setDrawColor(255,191,0); pdf.setLineWidth(0.6); for(var a=0;a<8;a++){ var ang=a*Math.PI/4; pdf.line(x+4*Math.cos(ang), y+4*Math.sin(ang), x+6.2*Math.cos(ang), y+6.2*Math.sin(ang)); } }
+  function drawCloud(pdf,x,y){ pdf.setFillColor(200,200,200); pdf.circle(x-2,y,2.2,'F'); pdf.circle(x+0.8,y-1.2,2.8,'F'); pdf.circle(x+3.6,y,2.2,'F'); pdf.rect(x-4.6,y,9.2,3,'F'); }
+  function drawRain(pdf,x,y){ drawCloud(pdf,x,y); pdf.setDrawColor(60,130,200); pdf.setLineWidth(0.7); pdf.line(x-2.5,y+3.8,x-3.2,y+5.8); pdf.line(x,y+3.8,x-0.7,y+5.8); pdf.line(x+2.5,y+3.8,x+1.8,y+5.8); }
+  function drawPartly(pdf,x,y){ drawCloud(pdf,x+1,y); drawSun(pdf,x-3.8,y-1.2); }
+  function drawIcon(pdf,type,x,y){ if(type==='sun') drawSun(pdf,x,y); else if(type==='partly') drawPartly(pdf,x,y); else if(type==='rain') drawRain(pdf,x,y); else drawCloud(pdf,x,y); }
+
+  // Logo loader (bigger logo)
+  function getLogoDataUrl(){ return new Promise(function(resolve){ var img=new Image(); img.crossOrigin='anonymous'; img.onload=function(){ try{ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; var ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/jpeg',0.9)); }catch(e){ resolve(null); } }; img.onerror=function(){ resolve(null); }; img.src='assets/logo.jpg'; }); }
+
   function pick(items, used){
     for(var i=0;i<items.length;i++){
       var it=items[i], key=(it.name||'')+'|'+(it.address||'');
@@ -75,8 +78,8 @@
     var fd=new FormData(form);
     var name=capFirst(String(fd.get('name')||''));
     var days=Math.max(1, Math.min(7, parseInt(fd.get('days')||'3',10)));
-    var ints=[], inputs=form.querySelectorAll('input[name="interests"]:checked');
-    for(var i=0;i<inputs.length;i++){ ints.push(inputs[i].value); }
+    var inputs=form.querySelectorAll('input[name="interests"]:checked');
+    var ints=[]; for(var i=0;i<inputs.length;i++){ ints.push(inputs[i].value); }
     var sd=document.getElementById('plannerStartDate');
     var start=(sd && sd.value) || todayISO();
     if(!ints.length) ints=['arte','natura','enogastronomia'];
@@ -87,11 +90,11 @@
     pdf.setFontSize(10);
     var padX=3, padY=2;
     var w = pdf.getTextWidth(label) + padX*2 + 2;
-    var h = 10*0.45 + padY*2;
+    var h = 10*0.45 + padY*2; // ~8.5mm
     pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b);
     if(pdf.roundedRect){ pdf.roundedRect(x, y-h+padY, w, h, 3, 3, 'F'); } else { pdf.rect(x, y-h+padY, w, h, 'F'); }
     pdf.setTextColor(255); pdf.text(label, x+padX+1, y);
-    return w;
+    return {w:w, h:h};
   }
 
   function wrapLines(pdf, text, maxWidth){
@@ -109,11 +112,11 @@
   }
 
   function renderSegment(pdf, x, y, cardW, pillLabel, timeLabel, text, phone, makeTelLink){
-    var pillW = drawPill(pdf, x, y, pillLabel);
+    var pill = drawPill(pdf, x, y, pillLabel);
     var gap = 3;
     pdf.setTextColor(0,0,0); pdf.setFontSize(10);
-    pdf.text(timeLabel, x + pillW + gap, y);
-    var startX = x + pillW + gap + pdf.getTextWidth(timeLabel) + 3;
+    pdf.text(timeLabel, x + pill.w + gap, y);
+    var startX = x + pill.w + gap + pdf.getTextWidth(timeLabel) + 3;
     var maxW = (x + cardW - PADDING) - startX;
     pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
     var lines = wrapLines(pdf, text, Math.max(30, maxW));
@@ -129,42 +132,9 @@
       try{ var w = pdf.getTextWidth(label); if(pdf.link){ pdf.link(startX, y2-4.2, w, 5.6, { url: 'tel:'+tel }); } }catch(e){}
       usedH += LINE;
     }
-    return usedH + 1;
-  }
-
-  function presentSaveSheet(blob, fname){
-    var url = URL.createObjectURL(blob);
-    var host = document.getElementById('planner-actions');
-    if(!host){
-      host = document.createElement('div'); host.id='planner-actions';
-      host.innerHTML = '<div class="sheet"><h4>Salva o condividi il PDF</h4><div class="row"><button id="actShare">Condividi…</button><button class="secondary" id="actOpen">Apri / Scarica</button></div><button class="close" id="actClose">Chiudi</button></div>';
-      document.body.appendChild(host);
-    }
-    var btnShare = host.querySelector('#actShare');
-    var btnOpen = host.querySelector('#actOpen');
-    var btnClose = host.querySelector('#actClose');
-    btnShare.onclick = function(){
-      try{
-        var file=null; try{ file=new File([blob], fname, {type:'application/pdf'}); }catch(e){}
-        if(navigator.canShare && file && navigator.canShare({files:[file]})){
-          navigator.share({ files:[file], title: fname, text: 'Itinerario' });
-        }else if(navigator.share){
-          navigator.share({ title: fname, url: url });
-        }else{
-          var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000);
-        }
-      }catch(e){
-        var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000);
-      }
-    };
-    btnOpen.onclick = function(){ var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000); };
-    btnClose.onclick = function(){ host.classList.remove('open'); setTimeout(function(){ URL.revokeObjectURL(url); }, 5000); };
-    requestAnimationFrame(function(){ host.classList.add('open'); });
-  }
-
-  function toast(msg){
-    var n=document.createElement('div'); n.id='planner-toast'; n.textContent=msg; document.body.appendChild(n);
-    setTimeout(function(){ if(n && n.parentNode){ n.parentNode.removeChild(n); } }, 2200);
+    // ensure next block starts below the pill height too
+    var blockH = Math.max(usedH, pill.h);
+    return blockH + 2;
   }
 
   function generatePDF(ev){
@@ -176,7 +146,7 @@
       var prefs=serializePrefs();
       var startISO=prefs.start, endISO=addDays(startISO, prefs.days-1);
 
-      Promise.all([ ensurePDF(), loadJSON('assets/do.json'), loadJSON('assets/eat.json'), fetchWeather(startISO,endISO) ])
+      Promise.all([ ensurePDF(), loadJSON('assets/do.json'), loadJSON('assets/eat.json'), fetchWeather(startISO,endISO), getLogoDataUrl() ])
       .then(function(arr){
         Progress.step('Dati pronti…');
         var jsPDF=window.jspdf.jsPDF;
@@ -185,35 +155,37 @@
         var ph=pdf.internal.pageSize.getHeight();
         var usableW = pw - 2*MARGIN;
 
-        // Extract categories without Array.find
-        function getItemsBySlug(cats, slug){
-          for(var i=0;i<cats.length;i++){ if(cats[i] && cats[i].slug===slug){ return cats[i].items || []; } }
-          return [];
-        }
+        function getItemsBySlug(cats, slug){ for(var i=0;i<cats.length;i++){ if(cats[i] && cats[i].slug===slug){ return cats[i].items || []; } } return []; }
         var vedere=getItemsBySlug(arr[1].categories||[], 'vedere');
         var esc=getItemsBySlug(arr[1].categories||[], 'escursioni');
         var prov=getItemsBySlug(arr[1].categories||[], 'provare');
         var food=getItemsBySlug(arr[2].categories||[], 'tradizione'); if(!food.length){ var c0=(arr[2].categories||[])[0]; food=(c0&&c0.items)||[]; }
         var meteo=arr[3]||[];
+        var logo=arr[4];
 
         // Bg + header
         pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
         var y=12; pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
         pdf.line(MARGIN,12,pw-MARGIN,12);
         pdf.setTextColor(0,0,0);
-        pdf.setFontSize(18); var safe=capFirst((prefs.name||'Ospite').trim()); pdf.text('Itinerario per '+safe, MARGIN, 20);
+        pdf.setFontSize(18); var safe=capFirst((prefs.name||'Ospite').trim()); pdf.text(safe, MARGIN+30, 20); // name alone (clean)
+        // bigger logo top-right
+        if(logo){ try{ pdf.addImage(logo,'JPEG', pw-34, 8, 26, 26); }catch(e){} }
         pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 26);
 
+        // Meteo strip with icons
         if(meteo.length){
           y=32; pdf.setFontSize(10); pdf.setTextColor(0,0,0);
           var cols = meteo.length<5? meteo.length:5; var colW=(usableW)/cols;
           for(var mi=0; mi<cols; mi++){
             var d=meteo[mi], x=MARGIN + mi*colW;
+            drawIcon(pdf, iconType(d.wcode), x+5, y-1);
             var tmax=Math.round(d.tmax), tmin=Math.round(d.tmin), pr=(d.pprob==null?'—':String(d.pprob)+'%');
-            pdf.text(tmax+'°/'+tmin+'° '+pr, x, y);
-            pdf.text(fmtDateCap(d.date), x, y+5);
+            pdf.text(tmax+'°/'+tmin+'°', x+12, y);
+            pdf.text(pr, x+12, y+5);
+            pdf.text(fmtDateCap(d.date), x, y+10);
           }
-          y+=14;
+          y+=18;
         }else{ y=34; }
 
         var used={};
@@ -227,11 +199,12 @@
           var innerW = cardW - 2*PADDING;
           pdf.setFontSize(11);
           var estH = 14 + PADDING*2;
-          function est(text, tel){ var lines = wrapLines(pdf, text, innerW-60).length; return LINE + lines*LINE + (tel?LINE:0) + 1; }
-          estH += est((matt.name||'') + (matt.address? ' — '+matt.address : ''), false);
-          estH += est((lunch.name||'') + (lunch.address? ' — '+lunch.address : ''), !!lunch.phone);
-          estH += est((pom.name||'') + (pom.address? ' — '+pom.address : ''), false);
-          estH += est((dinner.name||'') + (dinner.address? ' — '+dinner.address : ''), !!dinner.phone);
+          function est(text, tel){ var lines = wrapLines(pdf, text, innerW-60).length; var pillH = 10*0.45 + 2*2; var contentH = Math.max(LINE, lines*LINE) + (tel?LINE:0) + 2; return Math.max(contentH, pillH); }
+          function lineFor(it){ return (it.name||'') + (it.address? ' — '+it.address : ''); }
+          estH += est(lineFor(matt), false);
+          estH += est(lineFor(lunch), !!lunch.phone);
+          estH += est(lineFor(pom), false);
+          estH += est(lineFor(dinner), !!dinner.phone);
 
           if(y + estH > ph - 12){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); y=12; }
 
@@ -241,9 +214,10 @@
           pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.5); pdf.line(MARGIN+2, y+9, MARGIN+cardW-2, y+9);
           pdf.setTextColor(0,0,0); pdf.setFontSize(13);
           pdf.text((di+1)+'. '+fmtDateCap(addDays(startISO,di)), MARGIN+PADDING, y+6);
+          // meteo icon per card
+          var wd = meteo[di] || {}; drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
 
           var cx = MARGIN+PADDING, cy = y + 14;
-          function lineFor(it){ return (it.name||'') + (it.address? ' — '+it.address : ''); }
           cy += renderSegment(pdf, cx, cy, cardW, 'Mattina', '09:00–12:30', lineFor(matt), null, false);
           cy += renderSegment(pdf, cx, cy, cardW, 'Pranzo', '12:30–14:30', lineFor(lunch), lunch.phone||null, true);
           cy += renderSegment(pdf, cx, cy, cardW, 'Pomeriggio', '15:00–19:00', lineFor(pom), null, false);
@@ -253,12 +227,12 @@
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
-        Progress.step('Pronto per salvare');
-        var blob = pdf.output('blob');
+        Progress.step('Salvataggio…');
         var fname='Itinerario_'+(prefs.name||'Ospite').replace(/[^a-z0-9-_]+/gi,'_')+'_'+startISO+'_'+prefs.days+'gg.pdf';
-        presentSaveSheet(blob, fname);
-        try{ pdf.save(fname); }catch(e){}
+        pdf.save(fname);
         Progress.finish();
+        // toast confirms v16
+        var n=document.createElement('div'); n.id='planner-toast'; n.textContent='Planner v16 OK'; document.body.appendChild(n); setTimeout(function(){ if(n&&n.parentNode){ n.parentNode.removeChild(n);} }, 1800);
       }).catch(function(err){
         console.error(err); Progress.error('Errore'); alert('Errore PDF: '+(err&&err.message?err.message:err));
       }).finally(function(){ var btn=document.getElementById('plannerGenerate'); if(btn){ btn.disabled=false; btn.removeAttribute('aria-busy'); } });
@@ -275,9 +249,6 @@
     if(form){ form.setAttribute('novalidate','novalidate'); form.addEventListener('submit', function(e){ e.preventDefault(); generatePDF(e); }, true); }
     document.addEventListener('click', function(e){ var t=e.target; if(!t) return; if((t.id==='plannerGenerate') || (t.closest && t.closest('#plannerGenerate'))){ e.preventDefault(); generatePDF(e);} }, true);
     var sd=document.getElementById('plannerStartDate'); if(sd && !sd.value){ sd.value=todayISO(); }
-    // tiny banner to confirm JS attivo
-    var b=document.createElement('div'); b.id='planner-toast'; b.textContent='Planner v15 attivo'; document.body.appendChild(b); setTimeout(function(){ if(b&&b.parentNode){ b.parentNode.removeChild(b);} }, 1800);
-    window.PlannerDebug={version:'v15'};
   }
 
   function boot(){ try{ attach(); }catch(e){ console.error(e); } }
