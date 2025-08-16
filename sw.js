@@ -1,10 +1,9 @@
-const CACHE_NAME = 'corte-san-girolamo-v3';
+const CACHE_NAME = 'corte-san-girolamo-v4';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
-  './planner.js',
   './manifest.webmanifest',
   './assets/gallery.json',
   './assets/i18n.json',

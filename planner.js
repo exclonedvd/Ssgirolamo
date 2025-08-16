@@ -8,7 +8,7 @@
 
   // ------------------ UTILS ------------------
 
-  // iOS / iPadOS detection (covers iPadOS with desktop UA)
+  // iOS / iPadOS detection (also covers iPadOS desktop UA)
   function isIOSMobile(){
     var ua = navigator.userAgent || '';
     var iOS = /iPad|iPhone|iPod/.test(ua);
@@ -346,19 +346,13 @@
 
           return Promise.resolve().then(function(){
             PlannerProgress.step('Impagino intestazione…');
-                        PlannerProgress.step('Impagino intestazione…');
             var y = 0, w = pageWidth;
-            try{
-              var acc = hexToRgb(ACCENT_HEX);
-              pdf.setFillColor(acc.r, acc.g, acc.b); pdf.rect(0,0,w,8,'F');
-              pdf.setTextColor(0,0,0);
-              pdf.setFontSize(18);
-              var safe = capFirst((prefs.name||'Ospite').trim());
-              pdf.text('Itinerario per '+safe, 8, 18);
-              pdf.setFontSize(11);
-              pdf.text('Periodo: '+fmtDateCap(start)+' – '+fmtDateCap(end), 8, 25);
-            }catch(e){ console.error('Header draw', e); }
-            y = 30;
+pdf.setFontSize(18);
+var _safe = capFirst((prefs.name||'Ospite').trim());
+pdf.text('Itinerario per '+_safe, 8, 16);
+pdf.setFontSize(11);
+pdf.text('Periodo: '+fmtDateCap(start)+' – '+fmtDateCap(end), 8, 23);
+y = 28;
 var used = {};
             var seq = Promise.resolve();
             for(let i=0;i<prefs.days;i++){
@@ -408,6 +402,18 @@ var used = {};
 
   // ------------------ WIRING ------------------
   function attachHandlers(){
+
+    // last-resort capture in case something prevented normal listener
+    function onCaptureClick(ev){
+      var t = ev.target;
+      if(!t) return;
+      if(t.id === 'plannerGenerate' || t.closest && t.closest('#plannerGenerate')){
+        ev.preventDefault(); ev.stopPropagation();
+        generatePDF(ev);
+      }
+    }
+    document.addEventListener('click', onCaptureClick, true);
+
     injectCSS();
     var form = document.getElementById('plannerForm');
     var btn = document.getElementById('plannerGenerate');
