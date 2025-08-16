@@ -1,4 +1,4 @@
-/* Planner with mobile save/share support (Web Share API + fallbacks) */
+/* Planner: pills + clickable tel, with end-of-flow Save/Share sheet (mobile-safe) */
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
@@ -15,7 +15,31 @@
   function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src; s.async=true; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
-  function injectCSS(){ if(document.getElementById('planner-css-share')) return; var s=document.createElement('style'); s.id='planner-css-share'; s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}" ; document.head.appendChild(s); }
+  function injectCSS(){
+    if(document.getElementById('planner-css-actions')) return;
+    var s=document.createElement('style'); s.id='planner-css-actions';
+    s.textContent=[
+      "#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}",
+      "#planner-progress.open{display:flex}",
+      "#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}",
+      "#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}",
+      "#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}",
+      "#planner-progress .head .label{font-weight:600}",
+      "#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}",
+      "#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}",
+      "@keyframes spin{to{transform:rotate(360deg)}}",
+      /* action sheet */
+      "#planner-actions{position:fixed;left:0;right:0;bottom:0;transform:translateY(100%);transition:.25s ease;z-index:100000;font:500 14px system-ui, -apple-system, Segoe UI, Roboto}",
+      "#planner-actions.open{transform:translateY(0)}",
+      "#planner-actions .sheet{background:#fff;border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -6px 24px rgba(0,0,0,.25);padding:12px}",
+      "#planner-actions .sheet h4{margin:4px 8px 12px;font-size:16px}",
+      "#planner-actions .row{display:flex;gap:10px;justify-content:space-between}",
+      "#planner-actions button{flex:1;padding:12px;border-radius:10px;border:0;background:#2b5a44;color:#fff}",
+      "#planner-actions button.secondary{background:#e6eee9;color:#2b5a44}",
+      "#planner-actions .close{margin-top:10px;display:block;width:100%;padding:10px;border:0;background:#f0f0f0;border-radius:10px}"
+    ].join("");
+    document.head.appendChild(s);
+  }
 
   var Progress={ _ui:null,_cur:0,_tot:1,
     _ensure:function(){ injectCSS(); if(this._ui) return this._ui; var w=document.createElement('div'); w.id='planner-progress'; w.innerHTML='<div class="box"><div class="head"><div class="spinner"></div><div class="label">Preparazione…</div></div><div class="bar"><i></i></div></div>'; document.body.appendChild(w); this._ui={wrap:w,bar:w.querySelector('.bar i'),label:w.querySelector('.label')}; return this._ui; },
@@ -23,7 +47,7 @@
     _render:function(l,n){ var ui=this._ensure(); var pct=Math.round(100*(n/Math.max(1,this._tot))); ui.bar.style.width=pct+'%'; if(l) ui.label.textContent=l; },
     start:function(l){ this._ensure().wrap.classList.add('open'); this._cur=0; this._render(l||'Avvio…',0); },
     step:function(l){ this._cur++; this._render(l,this._cur); },
-    finish:function(){ var ui=this._ensure(); this._render('Fatto',this._tot); setTimeout(function(){ ui.wrap.classList.remove('open'); }, 500); },
+    finish:function(){ var ui=this._ensure(); this._render('Fatto',this._tot); setTimeout(function(){ ui.wrap.classList.remove('open'); }, 300); },
     error:function(l){ var ui=this._ensure(); ui.label.textContent=l||'Errore'; ui.bar.style.width='0%'; ui.wrap.classList.add('open'); }
   };
 
@@ -54,7 +78,6 @@
     return {name:name,days:days,interests:ints,start:start};
   }
 
-  // pills helper
   function drawPill(pdf, x, y, label){
     pdf.setFontSize(10);
     var padX=3, padY=2;
@@ -96,37 +119,45 @@
     return usedH + 1;
   }
 
-  async function saveOrSharePDF(pdf, fname){
-    try{
-      var blob = pdf.output('blob');
-      var file;
-      try{ file = new File([blob], fname, {type:'application/pdf'}); }catch(e){ file = null; }
-      if(navigator.canShare && file && navigator.canShare({files:[file]})){
-        await navigator.share({ files:[file], title: fname, text: 'Itinerario di viaggio' });
-        return;
+  function presentSaveSheet(blob, fname){
+    var url = URL.createObjectURL(blob);
+    var host = document.getElementById('planner-actions');
+    if(!host){ host = document.createElement('div'); host.id='planner-actions'; host.innerHTML = '<div class="sheet"><h4>Salva o condividi il PDF</h4><div class="row"><button id="actShare">Condividi…</button><button class="secondary" id="actOpen">Apri / Scarica</button></div><button class="close" id="actClose">Chiudi</button></div>'; document.body.appendChild(host); }
+    var btnShare = host.querySelector('#actShare');
+    var btnOpen = host.querySelector('#actOpen');
+    var btnClose = host.querySelector('#actClose');
+    btnShare.onclick = function(){
+      try{
+        var file = new File([blob], fname, {type:'application/pdf'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          navigator.share({ files:[file], title: fname, text: 'Itinerario' });
+        }else{
+          // Fallback: open share target with blob URL (user può salvare)
+          var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000);
+        }
+      }catch(e){
+        var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000);
       }
-      // Fallback: programmatic download or open
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a'); a.href = url; a.download = fname;
-      // Some iOS versions ignore 'download' — still opens a viewer where user can share/salva
-      document.body.appendChild(a); a.click();
-      setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 10000);
-    }catch(e){
-      try{ pdf.save(fname); }catch(_){ alert('Salvataggio non riuscito: ' + e); }
-    }
+    };
+    btnOpen.onclick = function(){
+      var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 1000);
+    };
+    btnClose.onclick = function(){ host.classList.remove('open'); setTimeout(function(){ URL.revokeObjectURL(url); }, 5000); };
+    // open sheet
+    requestAnimationFrame(function(){ host.classList.add('open'); });
   }
 
   function generatePDF(ev){
     if(ev){ ev.preventDefault(); ev.stopPropagation(); }
     try{
       var btn=document.getElementById('plannerGenerate'); if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
-      Progress.init(7); Progress.start('Preparazione…');
+      injectCSS(); Progress.init(7); Progress.start('Preparazione…');
 
       var prefs=serializePrefs();
       var startISO=prefs.start, endISO=addDays(startISO, prefs.days-1);
 
       Promise.all([ ensurePDF(), loadJSON('assets/do.json'), loadJSON('assets/eat.json'), fetchWeather(startISO,endISO) ])
-      .then(async function(arr){
+      .then(function(arr){
         Progress.step('Dati pronti…');
         var jsPDF=window.jspdf.jsPDF;
         var pdf=new jsPDF('p','mm','a4');
@@ -167,7 +198,6 @@
           var pom = pick(esc.concat(vedere), used);
           var dinner = pick(food, used);
 
-          // rough height estimate
           var innerW = cardW - 2*PADDING;
           pdf.setFontSize(11);
           var estH = 14 + PADDING*2;
@@ -196,9 +226,10 @@
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
-        Progress.step('Salvataggio…');
+        Progress.step('Pronto per salvare');
+        var blob = pdf.output('blob');
         var fname='Itinerario_'+(prefs.name||'Ospite').replace(/[^a-z0-9-_]+/gi,'_')+'_'+startISO+'_'+prefs.days+'gg.pdf';
-        await saveOrSharePDF(pdf, fname);
+        presentSaveSheet(blob, fname);
         Progress.finish();
       }).catch(function(err){
         console.error(err); Progress.error('Errore'); alert('Errore PDF: '+(err&&err.message?err.message:err));
