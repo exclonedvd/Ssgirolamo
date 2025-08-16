@@ -28,6 +28,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
 // Gallery loader
 async function loadGallery(){
+  const box = document.getElementById('gallery');
+  if(!box || box.dataset.populated==='1') return;
+  box.dataset.populated='1';
   try{
     const res = await fetch('assets/gallery.json');
     const data = await res.json();
@@ -48,7 +51,11 @@ async function loadGallery(){
     });
   }catch(e){ console.warn('Galleria non disponibile', e); }
 }
-loadGallery();
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', ()=>{ if(!window.CSGallery){ loadGallery(); } }, {once:true});
+}else{
+  if(!window.CSGallery){ loadGallery(); }
+}
 
 // PWA
 if('serviceWorker' in navigator){

@@ -8,12 +8,12 @@
 
   // ------------------ UTILS ------------------
 
-  // iOS/mobile detection (robust for iPadOS too)
+  // iOS / iPadOS detection (covers iPadOS with desktop UA)
   function isIOSMobile(){
     var ua = navigator.userAgent || '';
     var iOS = /iPad|iPhone|iPod/.test(ua);
-    var isApple = /Mac/i.test(ua) && 'ontouchend' in document;
-    return iOS || isApple;
+    var isAppleTouch = /Mac/i.test(ua) && ('ontouchend' in document);
+    return iOS || isAppleTouch;
   }
   function capFirst(s){
     var t = (s == null ? '' : String(s));
@@ -223,7 +223,7 @@
     holder.style.position='fixed'; holder.style.left='-10000px'; holder.style.top='0'; holder.style.zIndex='-1';
     holder.innerHTML = html; document.body.appendChild(holder);
     var node = holder.querySelector('.pdf-root') || holder;
-    return window.html2canvas(node, {scale: (isIOSMobile()?1:2), useCORS:true, backgroundColor: BRAND_BG_HEX, imageTimeout:15000})
+    return window.html2canvas(node, {scale: (isIOSMobile()?1:2), useCORS:true, imageTimeout:15000, backgroundColor: BRAND_BG_HEX})
       .then(function(canvas){ holder.remove(); return canvas; })
       .catch(function(err){ holder.remove(); throw err; });
   }
@@ -337,14 +337,14 @@
           var pageWidth = pdf.internal.pageSize.getWidth();
           var pageHeight = pdf.internal.pageSize.getHeight();
           var IMG_FMT = isIOSMobile() ? 'JPEG' : 'PNG';
-          var TO_DATAURL = function(c){ return isIOSMobile() ? c.toDataURL('image/jpeg', 0.85) : c.toDataURL('image/png'); };
+          function TO_DATAURL(c){ try{ return isIOSMobile()? c.toDataURL('image/jpeg',0.85) : c.toDataURL('image/png'); }catch(e){ return c.toDataURL('image/jpeg',0.85); } }
 
           pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX));
 
           return htmlToCanvas(buildHeaderHTML(prefs.name, meteo)).then(function(headerCanvas){
             PlannerProgress.step('Impagino intestazione…');
             var y = 0, w = pageWidth, h = (headerCanvas.height * w) / Math.max(1, headerCanvas.width);
-            pdf.addImage(TO_DATAURL(headerCanvas), IMG_FMT, 0, y, w, h);
+            try{ pdf.addImage(headerCanvas, IMG_FMT, 0, y, w, h, undefined, 'FAST'); }catch(e){ pdf.addImage(TO_DATAURL(headerCanvas), IMG_FMT, 0, y, w, h, undefined, 'FAST'); }
             y += h + 4;
 
             var used = {};
@@ -358,7 +358,7 @@
                   return htmlToCanvas(buildDayHTML(day)).then(function(cardCanvas){
                     var cW = pageWidth, cH = (cardCanvas.height * cW) / Math.max(1, cardCanvas.width);
                     if(y + cH > pageHeight){ pdf.addPage(); pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX)); y = 0; }
-                    pdf.addImage(TO_DATAURL(cardCanvas), IMG_FMT, 0, y, cW, cH);
+                    pdf.addImage(cardCanvas.toDataURL('image/png'), IMG_FMT, 0, y, cW, cH);
                     y += cH + 4;
                     PlannerProgress.step('Giorno '+(idx+1)+'/'+prefs.days+'…');
                   });
