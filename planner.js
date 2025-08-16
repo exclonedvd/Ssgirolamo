@@ -7,6 +7,14 @@
   var ACCENT_HEX = '#2b5a44';
 
   // ------------------ UTILS ------------------
+
+  // iOS/mobile detection (robust for iPadOS too)
+  function isIOSMobile(){
+    var ua = navigator.userAgent || '';
+    var iOS = /iPad|iPhone|iPod/.test(ua);
+    var isApple = /Mac/i.test(ua) && 'ontouchend' in document;
+    return iOS || isApple;
+  }
   function capFirst(s){
     var t = (s == null ? '' : String(s));
     if(!t) return '';
@@ -215,7 +223,7 @@
     holder.style.position='fixed'; holder.style.left='-10000px'; holder.style.top='0'; holder.style.zIndex='-1';
     holder.innerHTML = html; document.body.appendChild(holder);
     var node = holder.querySelector('.pdf-root') || holder;
-    return window.html2canvas(node, {scale:2, useCORS:true, backgroundColor: BRAND_BG_HEX})
+    return window.html2canvas(node, {scale: (isIOSMobile()?1:2), useCORS:true, backgroundColor: BRAND_BG_HEX, imageTimeout:15000})
       .then(function(canvas){ holder.remove(); return canvas; })
       .catch(function(err){ holder.remove(); throw err; });
   }
@@ -328,14 +336,15 @@
           var pdf = new jsPDF('p','mm','a4');
           var pageWidth = pdf.internal.pageSize.getWidth();
           var pageHeight = pdf.internal.pageSize.getHeight();
-          var IMG_FMT = 'PNG';
+          var IMG_FMT = isIOSMobile() ? 'JPEG' : 'PNG';
+          var TO_DATAURL = function(c){ return isIOSMobile() ? c.toDataURL('image/jpeg', 0.85) : c.toDataURL('image/png'); };
 
           pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX));
 
           return htmlToCanvas(buildHeaderHTML(prefs.name, meteo)).then(function(headerCanvas){
             PlannerProgress.step('Impagino intestazione…');
             var y = 0, w = pageWidth, h = (headerCanvas.height * w) / Math.max(1, headerCanvas.width);
-            pdf.addImage(headerCanvas.toDataURL('image/png'), IMG_FMT, 0, y, w, h);
+            pdf.addImage(TO_DATAURL(headerCanvas), IMG_FMT, 0, y, w, h);
             y += h + 4;
 
             var used = {};
@@ -349,7 +358,7 @@
                   return htmlToCanvas(buildDayHTML(day)).then(function(cardCanvas){
                     var cW = pageWidth, cH = (cardCanvas.height * cW) / Math.max(1, cardCanvas.width);
                     if(y + cH > pageHeight){ pdf.addPage(); pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX)); y = 0; }
-                    pdf.addImage(cardCanvas.toDataURL('image/png'), IMG_FMT, 0, y, cW, cH);
+                    pdf.addImage(TO_DATAURL(cardCanvas), IMG_FMT, 0, y, cW, cH);
                     y += cH + 4;
                     PlannerProgress.step('Giorno '+(idx+1)+'/'+prefs.days+'…');
                   });
