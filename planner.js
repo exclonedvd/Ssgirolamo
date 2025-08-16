@@ -1,9 +1,6 @@
-/* Planner ES5 v22:
-   - Logo/Head/Periodo solo PRIMA pagina (come v21)
-   - Footer pagina+data
-   - Attività agriturismo incluse
-   - Layout tabella con pill centrati
-   - NOVITÀ: icona mappa cliccabile per ogni riga (apre Google Maps con destinazione)
+/* Planner ES5 v23:
+   - Come v22 (logo/periodo solo prima pagina, footer, attività agriturismo, tabella con pill centrati)
+   - NOVITÀ: icona 'mappa' (foglio piegato) al posto del pin, cliccabile per aprire la navigazione
 */
 (function(){
   var ITZ='Europe/Rome';
@@ -24,8 +21,8 @@
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-v22')) return;
-    var s=document.createElement('style'); s.id='planner-css-v22';
+    if(document.getElementById('planner-css-v23')) return;
+    var s=document.createElement('style'); s.id='planner-css-v23';
     s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}";
     document.head.appendChild(s);
   }
@@ -41,7 +38,7 @@
   };
 
   function loadJSON(url){ return fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
-  function withTimeout(p, ms){ return new Promise(function(res,rej){ var to=setTimeout(function(){ rej(new Error('timeout '+ms+'ms')); }, ms); p.then(function(v){ clearTimeout(to); res(v); }, function(e){ clearTimeout(to); rej(e); }); }); }
+  function withTimeout(p, ms){ return new Promise(function(res,rej){ var to=setTimeout(function(){ rej(new Error('timeout '+ms')); }, ms); p.then(function(v){ clearTimeout(to); res(v); }, function(e){ clearTimeout(to); rej(e); }); }); }
   function fetchWeather(startISO,endISO){
     var lat=45.156, lon=10.791;
     var url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&timezone='+encodeURIComponent(ITZ)+'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&start_date='+startISO+'&end_date='+endISO;
@@ -50,7 +47,7 @@
       .catch(function(){ return []; });
   }
 
-  // Weather icons (vector)
+  // Weather icons
   function iconType(wcode){ if(wcode==null) return 'na'; if(wcode===0 || wcode===1) return 'sun'; if(wcode===2 || wcode===3) return 'partly'; if(wcode===61 || wcode===63 || wcode===65 || wcode===80 || wcode===81 || wcode===82 || wcode===51 || wcode===53 || wcode===55) return 'rain'; return 'cloud'; }
   function drawSun(pdf,x,y){ pdf.setFillColor(255,191,0); pdf.circle(x,y,3,'F'); pdf.setDrawColor(255,191,0); pdf.setLineWidth(0.6); for(var a=0;a<8;a++){ var ang=a*Math.PI/4; pdf.line(x+4*Math.cos(ang), y+4*Math.sin(ang), x+6.2*Math.cos(ang), y+6.2*Math.sin(ang)); } }
   function drawCloud(pdf,x,y){ pdf.setFillColor(200,200,200); pdf.circle(x-2,y,2.2,'F'); pdf.circle(x+0.8,y-1.2,2.8,'F'); pdf.circle(x+3.6,y,2.2,'F'); pdf.rect(x-4.6,y,9.2,3,'F'); }
@@ -58,20 +55,26 @@
   function drawPartly(pdf,x,y){ drawCloud(pdf,x+1,y); drawSun(pdf,x-3.8,y-1.2); }
   function drawIcon(pdf,type,x,y){ if(type==='sun') drawSun(pdf,x,y); else if(type==='partly') drawPartly(pdf,x,y); else if(type==='rain') drawRain(pdf,x,y); else drawCloud(pdf,x,y); }
 
-  // Map pin icon (vector)
-  function drawMapPin(pdf,x,y,size){
-    var r = size*0.5;
-    pdf.setDrawColor(60); pdf.setFillColor(220,40,50);
-    // pin body (circle + tail)
-    pdf.circle(x+r, y+r, r*0.66, 'F'); // head
-    pdf.triangle(x+r, y+r*0.4, x+r*1.6, y+size, x+r*0.4, y+size, 'F'); // tail
-    // inner hole
-    pdf.setFillColor(255); pdf.circle(x+r, y+r, r*0.28, 'F');
+  // Paper Map icon (folded map)
+  // Draws a small 3-panel map with fold lines and a simple route polyline + marker dot.
+  function drawMapIcon(pdf, x, y, w, h){
+    var r=1.2; // corner radius
+    var sx=x, sy=y, ex=x+w, ey=y+h;
+    pdf.setDrawColor(70); pdf.setFillColor(245,245,245);
+    if(pdf.roundedRect){ pdf.roundedRect(sx, sy, w, h, r, r, 'FD'); } else { pdf.rect(sx, sy, w, h, 'FD'); }
+    // panels
+    var p1=sx + w/3, p2 = sx + 2*w/3;
+    pdf.setDrawColor(190); pdf.line(p1, sy+0.5, p1, ey-0.5);
+    pdf.line(p2, sy+0.5, p2, ey-0.5);
+    // route polyline
+    pdf.setDrawColor(120); pdf.setLineWidth(0.6);
+    pdf.line(sx+2, sy+h-2, p1-1.2, sy+h*0.55);
+    pdf.line(p1+1.2, sy+h*0.5, p2-1.2, sy+h*0.3);
+    pdf.line(p2+1.2, sy+h*0.25, ex-2, sy+2);
+    // destination dot
+    pdf.setFillColor(220,40,50); pdf.circle(ex-3, sy+3, 1.1, 'F');
   }
-  function mapsUrl(q){
-    q = (q||'').trim();
-    return 'https://www.google.com/maps/dir/?api=1&destination='+ encodeURIComponent(q);
-  }
+  function mapsUrl(q){ q=(q||'').trim(); return 'https://www.google.com/maps/dir/?api=1&destination='+ encodeURIComponent(q); }
 
   function getLogoDataUrl(){ return new Promise(function(resolve){ var img=new Image(); img.crossOrigin='anonymous'; img.onload=function(){ try{ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; var ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/jpeg',0.9)); }catch(e){ resolve(null); } }; img.onerror=function(){ resolve(null); }; img.src='assets/logo.jpg'; }); }
 
@@ -134,7 +137,7 @@
     var colPill = Math.min(36, Math.max(24, maxPillW + 6));
     var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
     var gap1=4, gap2=4;
-    var ICON_W=5, ICON_GAP=3;
+    var ICON_W=6.5, ICON_H=5.2, ICON_GAP=3; // paper map aspect
     var textMaxW = Math.max(40, cardW - (colPill + gap1 + colTime + gap2) - 6 - (ICON_W + ICON_GAP));
     var gridX1 = x + colPill + gap1;
     var gridX2 = gridX1 + colTime + gap2;
@@ -188,12 +191,12 @@
         try{ var w=pdf.getTextWidth(label); if(pdf.link){ pdf.link(tx, y2-1, w, 6, { url:'tel:'+String(rr.tel).replace(/[^0-9+]/g,'') }); } }catch(e){}
       }
 
-      // map icon at right side of text column (vertical center)
+      // map icon (paper map) at right of text
       if(rr.q){
         var iconX = gridX2 + 2 + textMaxW + ICON_GAP/2;
-        var iconY = centerY - (ICON_W/2);
-        drawMapPin(pdf, iconX, iconY, ICON_W);
-        try{ if(pdf.link){ pdf.link(iconX, iconY, ICON_W, ICON_W, { url: mapsUrl(rr.q) }); } }catch(e){}
+        var iconY = centerY - (ICON_H/2);
+        drawMapIcon(pdf, iconX, iconY, ICON_W, ICON_H);
+        try{ if(pdf.link){ pdf.link(iconX, iconY, ICON_W, ICON_H, { url: mapsUrl(rr.q) }); } }catch(e){}
       }
 
       cy += rowH;
@@ -229,7 +232,7 @@
         var meteo=arr[3]||[];
         var logo=arr[4];
 
-        // Extras agriturismo
+        // Agriturismo extras
         var extras=[
           {name:'Tempo nel verde', address:'Corte San Girolamo — relax tra i giardini e il parco'},
           {name:'Massaggi', address:'Corte San Girolamo — su richiesta'},
@@ -239,7 +242,7 @@
         prov   = (prov||[]).concat(extras);
         esc    = (esc||[]).concat(extras);
 
-        // Header (first page only)
+        // Header first page only
         pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
         pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
         pdf.line(MARGIN,12,pw-MARGIN,12);
@@ -282,7 +285,7 @@
             {pill:'Sera', time:'19:30–22:30', text:lineFor(dinner), tel:dinner.phone||null, q:queryFor(dinner)}
           ];
 
-          // estimate height consistent with table (remember icon eats width)
+          // estimate height consistent with table
           var padX=3, padY=2, fs=10;
           var pills=['Mattina','Pranzo','Pomeriggio','Sera']; var maxPillW=0, i;
           for(i=0;i<pills.length;i++){ maxPillW = Math.max(maxPillW, pdf.getTextWidth(pills[i]) + padX*2 + 2); }
@@ -290,7 +293,7 @@
           for(i=0;i<times.length;i++){ maxTimeW = Math.max(maxTimeW, pdf.getTextWidth(times[i])); }
           var colPill = Math.min(36, Math.max(24, maxPillW + 6));
           var colTime = Math.min(32, Math.max(22, maxTimeW + 8));
-          var gap1=4, gap2=4, ICON_W=5, ICON_GAP=3;
+          var gap1=4, gap2=4, ICON_W=6.5, ICON_H=5.2, ICON_GAP=3;
           var textMaxW = Math.max(40, (cardW - (colPill + gap1 + colTime + gap2) - 6 - (ICON_W + ICON_GAP)));
           var totalH=0;
           pdf.setFontSize(11);
@@ -325,7 +328,7 @@
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
-        // footer on every page
+        // footer all pages
         var total = pdf.getNumberOfPages();
         var stamp = genDateStr();
         for(var p=1; p<=total; p++){
