@@ -341,13 +341,35 @@
 
           pdfFillBg(pdf, hexToRgb(BRAND_BG_HEX));
 
-          return htmlToCanvas(buildHeaderHTML(prefs.name, meteo)).then(function(headerCanvas){
+          
+if(isIOSMobile()){
             PlannerProgress.step('Impagino intestazione…');
-            var y = 0, w = pageWidth, h = (headerCanvas.height * w) / Math.max(1, headerCanvas.width);
-            try{ pdf.addImage(headerCanvas, IMG_FMT, 0, y, w, h, undefined, 'FAST'); }catch(e){ pdf.addImage(TO_DATAURL(headerCanvas), IMG_FMT, 0, y, w, h, undefined, 'FAST'); }
-            y += h + 4;
-
-            var used = {};
+            var y = 0, w = pageWidth;
+            // Vector header (no html2canvas on iOS)
+            try{
+              pdf.setFontSize(18);
+              pdf.setTextColor(0,0,0);
+              pdf.text('Itinerario personalizzato', 12, 16);
+              pdf.setFontSize(12);
+              var who = (prefs.name||'Ospite').trim();
+              pdf.text('Per: ' + (who?who:'Ospite'), 12, 24);
+              pdf.setFontSize(10);
+              pdf.setTextColor(60);
+              pdf.text('Generato automaticamente in base a meteo e interessi', 12, 30);
+              // Divider
+              pdf.setDrawColor(200);
+              pdf.line(12, 34, pageWidth-12, 34);
+            }catch(_){}
+            var h = 36; // header block height
+            y += h + 2;
+          } else {
+            return htmlToCanvas(buildHeaderHTML(prefs.name, meteo)).then(function(headerCanvas){
+              PlannerProgress.step('Impagino intestazione…');
+              var y = 0, w = pageWidth, h = (headerCanvas.height * w) / Math.max(1, headerCanvas.width);
+              try{ pdf.addImage(headerCanvas, IMG_FMT, 0, y, w, h, undefined, 'FAST'); }catch(e){ pdf.addImage(TO_DATAURL(headerCanvas), IMG_FMT, 0, y, w, h, undefined, 'FAST'); }
+              y += h + 4;
+          });
+var used = {};
             var seq = Promise.resolve();
             for(let i=0;i<prefs.days;i++){
               (function(idx){
