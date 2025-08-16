@@ -1,11 +1,12 @@
-/* Planner vector-cards (wrap text, dynamic card height) — FIX */
+/* Planner vector cards with pills, times and clickable phone (mobile-safe) */
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
   var ACCENT={r:43,g:90,b:68};
+  var ACCENT_LIGHT={r:230,g:238,b:233};
   var CARD_BG={r:255,g:255,b:255};
   var TEXT_MUTED={r:60,g:60,b:60};
-  var MARGIN=8, GAP=6, PADDING=5, LINE=5.2;
+  var MARGIN=8, GAP=6, PADDING=6, LINE=5.4;
 
   function capFirst(s){ var t=(s==null?'':String(s)); return t ? t.charAt(0).toLocaleUpperCase('it-IT') + t.slice(1) : ''; }
   function todayISO(){ return new Date().toLocaleDateString('en-CA',{timeZone:ITZ}); }
@@ -16,8 +17,8 @@
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
   function injectCSS(){
-    if(document.getElementById('planner-css-cards-wrap')) return;
-    var s=document.createElement('style'); s.id='planner-css-cards-wrap';
+    if(document.getElementById('planner-css-pills')) return;
+    var s=document.createElement('style'); s.id='planner-css-pills';
     s.textContent=[
       "#planner-progress{position:fixed;left:0;top:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}",
       "#planner-progress.open{display:flex}",
@@ -69,7 +70,7 @@
     return {name:name,days:days,interests:ints,start:start};
   }
 
-  // Weather icons (vector)
+  // Weather icons
   function iconType(wcode){ if(wcode==null) return 'na'; if([0,1].includes(wcode)) return 'sun'; if([2,3].includes(wcode)) return 'partly'; if([45,48,51,53,55,56,57,80,81,82].includes(wcode)) return 'rain'; if([61,63,65].includes(wcode)) return 'rain'; return 'cloud'; }
   function drawSun(pdf,x,y){ pdf.setFillColor(255,191,0); pdf.circle(x,y,3,'F'); pdf.setDrawColor(255,191,0); pdf.setLineWidth(0.6); for(var a=0;a<8;a++){ var ang=a*Math.PI/4; pdf.line(x+4*Math.cos(ang), y+4*Math.sin(ang), x+6.2*Math.cos(ang), y+6.2*Math.sin(ang)); } }
   function drawCloud(pdf,x,y){ pdf.setFillColor(200,200,200); pdf.circle(x-2,y,2.2,'F'); pdf.circle(x+0.8,y-1.2,2.8,'F'); pdf.circle(x+3.6,y,2.2,'F'); pdf.rect(x-4.6,y,9.2,3,'F'); }
@@ -79,28 +80,70 @@
 
   function getLogoDataUrl(){ return new Promise(function(resolve){ var img=new Image(); img.crossOrigin='anonymous'; img.onload=function(){ try{ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; var ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/jpeg',0.9)); }catch(e){ resolve(null); } }; img.onerror=function(){ resolve(null); }; img.src='assets/logo.jpg'; }); }
 
+  // Pills
+  function drawPill(pdf, x, y, label){
+    var fs = 10;
+    pdf.setFontSize(fs);
+    var tw = pdf.getTextWidth(label);
+    var padX = 3, padY = 2;
+    var w = tw + padX*2 + 2;
+    var h = fs*0.45 + padY*2;
+    if(pdf.roundedRect){ pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.roundedRect(x, y-h+padY, w, h, 3, 3, 'F'); }
+    else { pdf.setFillColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.rect(x, y-h+padY, w, h, 'F'); }
+    pdf.setTextColor(255); pdf.text(label, x+padX+1, y);
+    return w;
+  }
+
   function wrapLines(pdf, text, maxWidth){
     pdf.setLineHeightFactor(1.15);
-    try{
-      return pdf.splitTextToSize(String(text||''), maxWidth);
-    }catch(e){
-      // fallback manual split
+    try{ return pdf.splitTextToSize(String(text||''), maxWidth); }
+    catch(e){
       var out=[], words=String(text||'').split(' '), cur='';
-      for(var i=0;i<words.length;i++){
-        var t=words[i], tmp=cur? (cur+' '+t):t;
-        try{ if(pdf.getTextWidth(tmp)>maxWidth && cur){ out.push(cur); cur=t; } else { cur=tmp; } }
-        catch(_){ cur=tmp; }
-      }
+      for(var i=0;i<words.length;i++){ var t=words[i], tmp=cur? (cur+' '+t):t; try{ if(pdf.getTextWidth(tmp)>maxWidth && cur){ out.push(cur); cur=t; } else { cur=tmp; } }catch(_){ cur=tmp; } }
       if(cur) out.push(cur);
       return out;
     }
+  }
+
+  function renderSegment(pdf, x, y, cardW, pillLabel, timeLabel, text, phone, makeTelLink){
+    // pill
+    var pillW = drawPill(pdf, x, y, pillLabel);
+    var gap = 3;
+    // time
+    pdf.setTextColor(0,0,0); pdf.setFontSize(10);
+    pdf.text(timeLabel, x + pillW + gap, y);
+    // text lines
+    var startX = x + pillW + gap + pdf.getTextWidth(timeLabel) + 3;
+    var maxW = (x + cardW - PADDING) - startX;
+    pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
+    var lines = wrapLines(pdf, text, Math.max(30, maxW));
+    var cy = y + 3; // start slightly below baseline for room
+    lines.forEach(function(line, idx){ pdf.text(line, startX, cy + idx*LINE); });
+    var usedH = Math.max(LINE, lines.length*LINE);
+
+    // phone (only for restaurants/trattorie)
+    if(makeTelLink && phone){
+      var tel = String(phone).replace(/[^0-9+]/g,'');
+      var label = 'Tel: '+phone;
+      var y2 = cy + lines.length*LINE;
+      pdf.setTextColor(0,0,0); pdf.setFontSize(10);
+      // render text and link rectangle over it
+      pdf.text(label, startX, y2);
+      try{
+        var w = pdf.getTextWidth(label);
+        pdf.link(startX, y2-4.2, w, 5.6, { url: 'tel:'+tel });
+      }catch(e){/* ignore if link not supported */}
+      usedH += LINE;
+    }
+
+    return usedH + 1; // extra spacing
   }
 
   function generatePDF(ev){
     if(ev){ ev.preventDefault(); ev.stopPropagation(); }
     try{
       var btn=document.getElementById('plannerGenerate'); if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
-      Progress.init(7); Progress.start('Preparazione…');
+      Progress.init(8); Progress.start('Preparazione…');
 
       var prefs=serializePrefs();
       var startISO=prefs.start, endISO=addDays(startISO, prefs.days-1);
@@ -146,55 +189,65 @@
           y+=18;
         }else{ y=34; }
 
-        // Cards with wrapping
+        // Cards with pills and wrapping
         var used={};
         var cardW=usableW;
         for(var di=0; di<prefs.days; di++){
+          // pick entries
           var matt = pick(vedere.concat(prov), used);
+          var lunch = pick(food, used);
           var pom = pick(esc.concat(vedere), used);
-          var sera = pick(food, used);
-          var labelMatt='Mattina:  ';
-          var labelPom='Pomeriggio:  ';
-          var labelCena='Cena:  ';
+          var dinner = pick(food, used);
 
-          var textMatt = (matt.name||'') + (matt.address? ' — '+matt.address : '') + (matt.phone? ' — '+matt.phone : '');
-          var textPom  = (pom.name||'')  + (pom.address?  ' — '+pom.address  : '') + (pom.phone?  ' — '+pom.phone  : '');
-          var textCena = (sera.name||'') + (sera.address? ' — '+sera.address : '') + (sera.phone? ' — '+sera.phone : '');
+          // strings
+          function lineFor(it){ return (it.name||'') + (it.address? ' — '+it.address : ''); }
+          var sMatt = lineFor(matt);
+          var sLunch = lineFor(lunch);
+          var sPom = lineFor(pom);
+          var sDinner = lineFor(dinner);
 
-          var innerW = cardW - 2*PADDING - 6;
-          pdf.setFontSize(11); pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b);
-          var l1 = wrapLines(pdf, labelMatt + textMatt, innerW);
-          var l2 = wrapLines(pdf, labelPom  + textPom,  innerW);
-          var l3 = wrapLines(pdf, labelCena + textCena, innerW);
-          var linesCount = l1.length + l2.length + l3.length;
-          var headerH = 11; // title row height
-          var contentH = Math.max(1, linesCount) * LINE + 4;
-          var cardH = Math.max(40, headerH + contentH + PADDING*2);
+          // compute dynamic height by simulating segments
+          var innerW = cardW - 2*PADDING;
+          var tmpPdf = pdf; // using same font settings
+          tmpPdf.setFontSize(11);
+          var estH = 0;
+          // approximate: pill+time takes same vertical height as one line; text wrapped lines + optional phone adds more
+          var hMatt = LINE + wrapLines(tmpPdf, sMatt, innerW - 60).length * LINE;
+          var hLunch = LINE + wrapLines(tmpPdf, sLunch, innerW - 60).length * LINE + (lunch.phone? LINE:0);
+          var hPom = LINE + wrapLines(tmpPdf, sPom, innerW - 60).length * LINE;
+          var hDinner = LINE + wrapLines(tmpPdf, sDinner, innerW - 60).length * LINE + (dinner.phone? LINE:0);
+          estH = hMatt + hLunch + hPom + hDinner + PADDING*2 + 14; // header row + padding
 
-          if(y + cardH > ph - 12){
+          if(y + estH > ph - 12){
             pdf.addPage();
             pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
             y=12;
           }
 
+          // frame
           pdf.setDrawColor(220); pdf.setFillColor(CARD_BG.r,CARD_BG.g,CARD_BG.b);
-          if(pdf.roundedRect){ pdf.roundedRect(MARGIN,y,cardW,cardH,3,3,'FD'); } else { pdf.rect(MARGIN,y,cardW,cardH,'FD'); }
+          if(pdf.roundedRect){ pdf.roundedRect(MARGIN,y,cardW,estH,3,3,'FD'); } else { pdf.rect(MARGIN,y,cardW,estH,'FD'); }
 
+          // title
           pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.5); pdf.line(MARGIN+2, y+9, MARGIN+cardW-2, y+9);
           pdf.setTextColor(0,0,0); pdf.setFontSize(13);
           pdf.text((di+1)+'. '+fmtDateCap(addDays(startISO,di)), MARGIN+PADDING, y+6);
           var wd=(meteo[di]||{}); drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
 
-          pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
-          var cx = MARGIN+PADDING; var cy = y + headerH + PADDING + 2;
-          l1.forEach(function(line){ pdf.text(line, cx, cy); cy += LINE; });
-          l2.forEach(function(line){ pdf.text(line, cx, cy); cy += LINE; });
-          l3.forEach(function(line){ pdf.text(line, cx, cy); cy += LINE; });
+          // content
+          var cx = MARGIN+PADDING;
+          var cy = y + 14; // start after title row
+          // render 4 segments with times
+          cy += renderSegment(pdf, cx, cy, cardW, 'Mattina', '09:00–12:30', sMatt, null, false);
+          cy += renderSegment(pdf, cx, cy, cardW, 'Pranzo', '12:30–14:30', sLunch, lunch.phone || null, true);
+          cy += renderSegment(pdf, cx, cy, cardW, 'Pomeriggio', '15:00–19:00', sPom, null, false);
+          cy += renderSegment(pdf, cx, cy, cardW, 'Sera', '19:30–22:30', sDinner, dinner.phone || null, true);
 
-          y += cardH + GAP;
+          y += estH + GAP;
           Progress.step('Giorno '+(di+1)+'/'+prefs.days+'…');
         }
 
+        // footer
         pdf.setTextColor(120); pdf.setFontSize(9);
         pdf.text('Corte San Girolamo · Itinerario generato automaticamente', MARGIN, ph-6);
 
