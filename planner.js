@@ -1,10 +1,11 @@
-/* Planner vector-cards with weather icons + logo (mobile-safe, no html2canvas) */
+/* Planner vector-cards (wrap text, dynamic card height) */
 (function(){
   var ITZ='Europe/Rome';
   var BRAND_BG={r:246,g:239,b:233};
   var ACCENT={r:43,g:90,b:68};
   var CARD_BG={r:255,g:255,b:255};
-  var TEXT_MUTED={r:80,g:80,b:80};
+  var TEXT_MUTED={r:60,g:60,b:60};
+  var MARGIN=8, GAP=6, PADDING=5, LINE=5.2;
 
   function capFirst(s){ var t=(s==null?'':String(s)); return t ? t.charAt(0).toLocaleUpperCase('it-IT') + t.slice(1) : ''; }
   function todayISO(){ return new Date().toLocaleDateString('en-CA',{timeZone:ITZ}); }
@@ -13,7 +14,7 @@
   function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src; s.async=true; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   function ensurePDF(){ if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(); return loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js').catch(function(){ return loadScript('assets/vendor/jspdf.umd.min.js'); }); }
 
-  function injectCSS(){ if(document.getElementById('planner-css-cards')) return; var s=document.createElement('style'); s.id='planner-css-cards'; s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}"; document.head.appendChild(s); }
+  function injectCSS(){ if(document.getElementById('planner-css-cards-wrap')) return; var s=document.createElement('style'); s.id='planner-css-cards-wrap'; s.textContent="#planner-progress{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:99999}#planner-progress.open{display:flex}#planner-progress .box{min-width:260px;max-width:90vw;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:14px 16px}#planner-progress .head{display:flex;align-items:center;gap:8px;margin-bottom:10px}#planner-progress .head .spinner{width:16px;height:16px;border:2px solid #2b5a44;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}#planner-progress .head .label{font-weight:600}#planner-progress .bar{background:#eee;height:8px;border-radius:999px;overflow:hidden}#planner-progress .bar i{display:block;height:100%;width:0;background:#2b5a44}@keyframes spin{to{transform:rotate(360deg)}}"; document.head.appendChild(s); }
 
   var Progress={ _ui:null,_cur:0,_tot:1,
     _ensure(){ injectCSS(); if(this._ui) return this._ui; var w=document.createElement('div'); w.id='planner-progress'; w.innerHTML='<div class=box><div class=head><div class=spinner></div><div class=label>Preparazione…</div></div><div class=bar><i></i></div></div>'; document.body.appendChild(w); this._ui={wrap:w,bar:w.querySelector('.bar i'),label:w.querySelector('.label')}; return this._ui; },
@@ -33,7 +34,7 @@
     var url=new URL('https://api.open-meteo.com/v1/forecast');
     url.search=new URLSearchParams({ latitude:lat, longitude:lon, timezone:ITZ,
       daily:'weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
-      start_date:startISO, end_date:endISO }).toString();
+      start_date:startISO, end_date=endISO }).toString();
     return withTimeout(fetch(url.toString()).then(function(r){ if(!r.ok) throw 0; return r.json(); }), 3000)
       .then(function(j){ var out=[], n=(j.daily&&j.daily.time?j.daily.time.length:0); for(var i=0;i<n;i++){ out.push({date:j.daily.time[i], tmin:j.daily.temperature_2m_min[i], tmax:j.daily.temperature_2m_max[i], pprob:j.daily.precipitation_probability_max[i], wcode:j.daily.weathercode[i]}); } return out; })
       .catch(function(){ return []; });
@@ -42,7 +43,7 @@
   function pick(items, used){ for(var i=0;i<items.length;i++){ var key=(items[i].name||'')+'|'+(items[i].address||''); if(!used[key]){ used[key]=1; return items[i]; } } return items[0] || {name:'—'}; }
   function serializePrefs(){ var form=document.getElementById('plannerForm'); if(!form) return {name:'',days:3,interests:['arte','natura','enogastronomia'],start:todayISO()}; var fd=new FormData(form); var name=capFirst(String(fd.get('name')||'')); var days=Math.max(1, Math.min(7, parseInt(fd.get('days')||'3',10))); var ints=[]; form.querySelectorAll('input[name="interests"]:checked').forEach(function(i){ints.push(i.value);}); var start=(document.getElementById('plannerStartDate') && document.getElementById('plannerStartDate').value) || todayISO(); if(!ints.length) ints=['arte','natura','enogastronomia']; return {name:name,days:days,interests:ints,start:start}; }
 
-  // Weather icon draw (vector)
+  // Weather icons (vector)
   function iconType(wcode){ if(wcode==null) return 'na'; if([0,1].includes(wcode)) return 'sun'; if([2,3].includes(wcode)) return 'partly'; if([45,48,51,53,55,56,57,80,81,82].includes(wcode)) return 'rain'; if([61,63,65].includes(wcode)) return 'rain'; return 'cloud'; }
   function drawSun(pdf,x,y){ pdf.setFillColor(255,191,0); pdf.circle(x,y,3,'F'); pdf.setDrawColor(255,191,0); pdf.setLineWidth(0.6); for(var a=0;a<8;a++){ var ang=a*Math.PI/4; pdf.line(x+4*Math.cos(ang), y+4*Math.sin(ang), x+6.2*Math.cos(ang), y+6.2*Math.sin(ang)); } }
   function drawCloud(pdf,x,y){ pdf.setFillColor(200,200,200); pdf.circle(x-2,y,2.2,'F'); pdf.circle(x+0.8,y-1.2,2.8,'F'); pdf.circle(x+3.6,y,2.2,'F'); pdf.rect(x-4.6,y,9.2,3,'F'); }
@@ -50,8 +51,17 @@
   function drawPartly(pdf,x,y){ drawCloud(pdf,x+1,y); drawSun(pdf,x-3.8,y-1.2); }
   function drawIcon(pdf,type,x,y){ if(type==='sun') drawSun(pdf,x,y); else if(type==='partly') drawPartly(pdf,x,y); else if(type==='rain') drawRain(pdf,x,y); else drawCloud(pdf,x,y); }
 
-  // Logo
   function getLogoDataUrl(){ return new Promise(function(resolve){ var img=new Image(); img.crossOrigin='anonymous'; img.onload=function(){ try{ var c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; var ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/jpeg',0.9)); }catch(e){ resolve(null); } }; img.onerror=function(){ resolve(null); }; img.src='assets/logo.jpg'; }); }
+
+  function wrapLines(pdf, text, maxWidth){
+    pdf.setLineHeightFactor(1.15);
+    try{ return pdf.splitTextToSize(text, maxWidth); }catch(e){ 
+      // fallback manual split by commas then words
+      var out=[], tokens=String(text||'').split(' '), cur='';
+      for(var i=0;i<tokens.length;i++){ var t=tokens[i]; var tmp=cur ? (cur+' '+t) : t; if(pdf.getTextWidth(tmp) > maxWidth && cur){ out.push(cur); cur=t; } else { cur=tmp; } }
+      if(cur) out.push(cur); return out;
+    }
+  }
 
   function generatePDF(ev){
     if(ev){ ev.preventDefault(); ev.stopPropagation(); }
@@ -69,6 +79,7 @@
         var pdf=new jsPDF('p','mm','a4');
         var pw=pdf.internal.pageSize.getWidth();
         var ph=pdf.internal.pageSize.getHeight();
+        var usableW = pw - 2*MARGIN;
 
         var vedere=(arr[1].categories.find(c=>c.slug==='vedere')||{}).items||[];
         var esc=(arr[1].categories.find(c=>c.slug==='escursioni')||{}).items||[];
@@ -81,57 +92,72 @@
         pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F');
 
         // Header with logo
-        var y=10; pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
-        if(logo){ try{ pdf.addImage(logo,'JPEG', pw-30, 8, 22, 22); }catch(e){} }
-        pdf.line(8,12,pw-8,12);
+        var y=12; pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.8);
+        if(logo){ try{ pdf.addImage(logo,'JPEG', pw-28, 8, 18, 18); }catch(e){} }
+        pdf.line(MARGIN,12,pw-MARGIN,12);
         pdf.setTextColor(0,0,0);
-        pdf.setFontSize(18); var safe=capFirst((prefs.name||'Ospite').trim()); pdf.text('Itinerario per '+safe, 8, 20);
-        pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), 8, 26);
+        pdf.setFontSize(18); var safe=capFirst((prefs.name||'Ospite').trim()); pdf.text('Itinerario per '+safe, MARGIN, 20);
+        pdf.setFontSize(11); pdf.text('Periodo: '+fmtDateCap(startISO)+' – '+fmtDateCap(endISO), MARGIN, 26);
 
-        // Meteo strip (icons + values)
+        // Meteo strip
         if(meteo.length){
-          y=30; pdf.setFontSize(11);
-          for(var i=0;i<meteo.length;i++){ var d=meteo[i];
-            var x=10 + i*( (pw-20)/Math.min(meteo.length,5) ); if(x>pw-36) break;
-            var type=iconType(d.wcode); drawIcon(pdf,type,x+5,y-1);
+          y=32; pdf.setFontSize(10); pdf.setTextColor(0,0,0);
+          var cols=Math.min(meteo.length,5), colW=(usableW)/cols;
+          for(var i=0;i<cols;i++){
+            var d=meteo[i], x=MARGIN + i*colW;
+            drawIcon(pdf, iconType(d.wcode), x+5, y-1);
             pdf.text(Math.round(d.tmax)+'°/'+Math.round(d.tmin)+'°', x+12, y);
             pdf.text((d.pprob==null?'—':d.pprob+'%'), x+12, y+5);
             pdf.text(fmtDateCap(d.date), x, y+10);
           }
           y+=18;
-        }else{ y=32; }
+        }else{ y=34; }
 
-        // Cards
+        // Cards with wrapping
         var used={};
-        var margin=8, gap=6, cardW=pw-2*margin, cardH=42;
+        var cardW=usableW;
         for(var i=0;i<prefs.days;i++){
-          if(y+cardH>ph-12){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); y=12; }
-          // frame
-          pdf.setDrawColor(220); pdf.setFillColor(CARD_BG.r,CARD_BG.g,CARD_BG.b);
-          if(pdf.roundedRect){ pdf.roundedRect(margin,y,cardW,cardH,3,3,'FD'); } else { pdf.rect(margin,y,cardW,cardH,'FD'); }
-          // title row
-          pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.5); pdf.line(margin+2, y+9, margin+cardW-2, y+9);
-          pdf.setTextColor(0,0,0); pdf.setFontSize(13); pdf.text((i+1)+'. '+fmtDateCap(addDays(startISO,i)), margin+4, y+6);
-          // weather icon
-          var wd=(meteo[i]||{}); drawIcon(pdf, iconType(wd.wcode), margin+cardW-10, y+6);
-
-          // content lines
+          // Prepare lines and card height
           var matt = pick(vedere.concat(prov), used);
           var pom = pick(esc.concat(vedere), used);
           var sera = pick(food, used);
+          var innerW = cardW - 2*PADDING - 6; // leave space for number badge
+          pdf.setFontSize(11); pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b);
+          var l1 = wrapLines(pdf, 'Mattina:  ' + ((matt.name||'') + (matt.address? ' — '+matt.address : '') + (matt.phone? ' — '+matt.phone : '')), innerW);
+          var l2 = wrapLines(pdf, 'Pomeriggio:  ' + ((pom.name||'') + (pom.address? ' — '+pom.address : '') + (pom.phone? ' — '+pom.phone : '')), innerW);
+          var l3 = wrapLines(pdf, 'Cena:  ' + ((sera.name||'') + (sera.address? ' — '+sera.address : '') + (sera.phone? ' — '+sera.phone : '')), innerW);
+          var linesCount = l1.length + l2.length + l3.length;
+          var headerH = 11; // title row
+          var contentH = Math.max(1, linesCount) * LINE + 4;
+          var cardH = Math.max(40, headerH + contentH + PADDING*2);
+
+          // New page if needed
+          if(y + cardH > ph - 12){ pdf.addPage(); pdf.setFillColor(BRAND_BG.r,BRAND_BG.g,BRAND_BG.b); pdf.rect(0,0,pw,ph,'F'); y=12; }
+
+          // Card frame
+          pdf.setDrawColor(220); pdf.setFillColor(CARD_BG.r,CARD_BG.g,CARD_BG.b);
+          if(pdf.roundedRect){ pdf.roundedRect(MARGIN,y,cardW,cardH,3,3,'FD'); } else { pdf.rect(MARGIN,y,cardW,cardH,'FD'); }
+
+          // Title row
+          pdf.setDrawColor(ACCENT.r,ACCENT.g,ACCENT.b); pdf.setLineWidth(0.5); pdf.line(MARGIN+2, y+9, MARGIN+cardW-2, y+9);
+          pdf.setTextColor(0,0,0); pdf.setFontSize(13);
+          pdf.text((i+1)+'. '+fmtDateCap(addDays(startISO,i)), MARGIN+PADDING, y+6);
+          var wd=(meteo[i]||{}); drawIcon(pdf, iconType(wd.wcode), MARGIN+cardW-8, y+6);
+
+          // Content lines
           pdf.setTextColor(TEXT_MUTED.r,TEXT_MUTED.g,TEXT_MUTED.b); pdf.setFontSize(11);
-          function line(i){ var s=(i.name||''); if(i.address) s+=' — '+i.address; if(i.phone) s+=' — '+i.phone; return s; }
-          var yy=y+15;
-          pdf.text('Mattina:  '+line(matt), margin+4, yy); yy+=6;
-          pdf.text('Pomeriggio:  '+line(pom), margin+4, yy); yy+=6;
-          pdf.text('Cena:  '+line(sera), margin+4, yy);
-          y += cardH + gap;
+          var cx = MARGIN+PADDING; var cy = y + headerH + PADDING + 2;
+          l1.forEach(function(line){ pdf.text(line, cx, cy); cy += LINE; });
+          l2.forEach(function(line){ pdf.text(line, cx, cy); cy += LINE; });
+          l3.forEach(function(line){ pdf.text(line, cx, cy); cy += LINE; });
+
+          y += cardH + GAP;
           Progress.step('Giorno '+(i+1)+'/'+prefs.days+'…');
         }
 
         // Footer
         pdf.setTextColor(120); pdf.setFontSize(9);
-        pdf.text('Corte San Girolamo · Itinerario generato automaticamente', margin, ph-6);
+        pdf.text('Corte San Girolamo · Itinerario generato automaticamente', MARGIN, ph-6);
 
         Progress.step('Salvataggio…');
         var fname='Itinerario_'+(prefs.name||'Ospite').replace(/[^a-z0-9-_]+/gi,'_')+'_'+startISO+'_'+prefs.days+'gg.pdf';
@@ -154,6 +180,6 @@
     var sd=document.getElementById('plannerStartDate'); if(sd && !sd.value){ sd.value=todayISO(); }
   }
 
-  function boot(){ try{ attach(); }catch(e){ console.error(e); } }
+  function boot(){ try{ injectCSS(); attach(); }catch(e){ console.error(e); } }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 })();
