@@ -1,10 +1,23 @@
-/*! Meteo — 7gg, riga scrollabile, in chip: sopra data (dd/mm), sotto icona+temperatura, con indicatore scroll */
+/*! Meteo — 7gg, riga scrollabile, data sopra (dd/mm), icona+temp sotto, freccia animata di scroll */
 (function(){
   function ready(fn){ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fn);} else {fn();} }
   function findMyScript(){
     var s = document.currentScript; if(s) return s;
     var list=document.getElementsByTagName('script');
     return list[list.length-1] || null;
+  }
+  function ensureStyles(){
+    if(document.getElementById('wx-meteo-css')) return;
+    var css = document.createElement('style');
+    css.id = 'wx-meteo-css';
+    css.textContent = [
+      '.wx-scroll-fade{position:absolute;right:0;top:3.25rem;width:24px;height:calc(100% - 3.25rem);',
+      'background:linear-gradient(to left, rgba(255,255,255,.95), rgba(255,255,255,0));pointer-events:none;}',
+      '.wx-scroll-hint{position:absolute;right:.5rem;bottom:.5rem;pointer-events:none;opacity:.8;}',
+      '.wx-scroll-hint .arrow{display:inline-block;font-size:1rem;animation:wx-slide 1.2s ease-in-out infinite;}',
+      '@keyframes wx-slide{0%{transform:translateX(0);opacity:.4;}50%{transform:translateX(6px);opacity:1;}100%{transform:translateX(0);opacity:.4;}}'
+    ].join('');
+    document.head.appendChild(css);
   }
   function iconNameFor(code){
     if(code===0) return 'sun';
@@ -60,6 +73,8 @@
       var titleIconSize=s.getAttribute('data-title-icon')||'14';
       var hint=(s.getAttribute('data-hint')||'true').toLowerCase()==='true';
 
+      ensureStyles();
+
       // Placeholder
       target.innerHTML = '<div class="container"><div class="card"><h3 class="title"><span class="title-icon" aria-hidden="true">'
         + iconSvg('title', titleIconSize) + '</span> Meteo '+(city||'')+'</h3>'
@@ -84,7 +99,7 @@
           html+='<h3 class="title"><span class="title-icon" aria-hidden="true">'
               + iconSvg('title', titleIconSize)
               + '</span> Meteo '+(city?city:'')+'</h3>';
-          // wrapper riga con possibile indicatore scroll
+          // wrapper riga con scroll + hint
           html+='<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;">';
           for(var i=0;i<len;i++){
             var code=d.weathercode[i];
@@ -101,9 +116,8 @@
           }
           html+='</div>'; // chips
           if(hint){
-            // Indicatore scroll: leggero gradiente a destra + icona ↔︎ in basso a destra
-            html+='<div aria-hidden="true" style="position:absolute;right:0;top:3.25rem;width:24px;height:calc(100% - 3.25rem);background:linear-gradient(to left, rgba(255,255,255,0.95), rgba(255,255,255,0));pointer-events:none;"></div>';
-            html+='<div aria-hidden="true" style="position:absolute;right:.5rem;bottom:.5rem;font-size:.8rem;opacity:.6;">⟷</div>';
+            html+='<div class="wx-scroll-fade" aria-hidden="true"></div>';
+            html+='<div class="wx-scroll-hint" aria-hidden="true"><span class="arrow">→</span></div>';
           }
           html+='</div></div>'; // card/container
           target.innerHTML=html;
