@@ -1,4 +1,4 @@
-/*! Meteo — Scheda compatta (7 giorni, 1 riga scrollabile, giorno+icona+temp) */
+/*! Meteo — 7 giorni, 1 riga scrollabile, giorno+icona+temp inline (compatto) */
 (function(){
   function ready(fn){ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fn);} else {fn();} }
   function findMyScript(){
@@ -44,6 +44,13 @@
     };
     return icons[name] || icons.cloud;
   }
+  function dayShort(iso){
+    try{
+      var d = new Date(iso+'T00:00:00');
+      var a = ['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
+      return a[d.getDay()];
+    }catch(e){ return iso; }
+  }
   function render(){
     try{
       var s=findMyScript(); if(!s) return;
@@ -60,6 +67,7 @@
         + '?latitude='+encodeURIComponent(lat)
         + '&longitude='+encodeURIComponent(lon)
         + '&daily=weathercode,temperature_2m_max,temperature_2m_min,time'
+        + '&forecast_days='+encodeURIComponent(days)  // forza 7
         + '&timezone=auto';
 
       fetch(url,{cache:'no-store'})
@@ -69,17 +77,12 @@
           var len=Math.min(days,(d.time||[]).length);
           if(!len){ target.innerHTML=''; return; }
 
-          function dayLabel(iso){
-            try{ return new Date(iso+'T00:00:00').toLocaleDateString('it-IT',{weekday:'short'}).replace('.',''); }
-            catch(e){ return iso; }
-          }
-
           var html='';
           html+='<div class="container"><div class="card">';
           html+='<h3 class="title"><span class="title-icon" aria-hidden="true">'
               + iconSvg('title', titleIconSize)
               + '</span> Meteo '+(city?city:'')+'</h3>';
-          // Singola riga: scroll orizzontale, senza wrap
+          // singola riga, scroll orizzontale
           html+='<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
           for(var i=0;i<len;i++){
             var code=d.weathercode[i];
@@ -88,10 +91,10 @@
             var tempTxt = (mode==='max') ? (tmax+'°')
                           : (mode==='min') ? (tmin+'°')
                           : (tmin+'°/'+tmax+'°');
-            html+='<div class="chip" role="listitem">'
-                +  '<div class="chip-line"><strong>'+dayLabel(d.time[i])+'</strong></div>'
-                +  '<div class="chip-line"><span class="chip-icon" aria-hidden="true">'+iconSvg(iconNameFor(code), iconSize)+'</span> '
-                +    '<span class="chip-temp">'+tempTxt+'</span></div>'
+            html+='<div class="chip" role="listitem" style="flex:0 0 auto; display:flex; align-items:center; gap:.35rem;">'
+                +  '<span class="chip-day"><strong>'+dayShort(d.time[i])+'</strong></span>'
+                +  '<span class="chip-icon" aria-hidden="true">'+iconSvg(iconNameFor(code), iconSize)+'</span>'
+                +  '<span class="chip-temp">'+tempTxt+'</span>'
                 +'</div>';
           }
           html+='</div>'; // chips
