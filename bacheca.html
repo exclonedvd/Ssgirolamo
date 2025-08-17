@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bacheca ospiti – Cosa fare a Mantova</title>
+  <meta name="description" content="Bacheca ospiti: consigli selezionati e suggerimenti della community su cosa vedere, dove provare e idee per escursioni a Mantova e dintorni.">
+  <link rel="stylesheet" href="./bacheca.css">
+</head>
+<body>
+<main class="container">
+  <header class="hero">
+    <h1>🧾 Bacheca ospiti</h1>
+    <p>Scorri i nostri consigli gratuiti su cosa non perdere a Mantova e dintorni. Vuoi aggiungere un suggerimento? Compila il form qui sotto.</p>
+  </header>
+
+  <!-- SCROLLER: consigli curati da noi (lista statica, 100% free) -->
+  <section class="house">
+    <h2>I nostri consigli (gratis)</h2>
+    <div class="scroller" id="scroller" aria-label="Consigli in scorrimento">
+      <ul id="scroller-list" class="tagstrip" aria-live="polite"></ul>
+    </div>
+    <div class="legend">
+      <span class="tag vedere">Cosa vedere</span>
+      <span class="tag provare">Da provare</span>
+      <span class="tag escursioni">Escursioni</span>
+    </div>
+  </section>
+
+  <section class="submit">
+    <h2>Lascia il tuo consiglio</h2>
+    <form name="bacheca-ospiti" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="card">
+      <input type="hidden" name="form-name" value="bacheca-ospiti">
+      <p class="sr-only"><label>Non compilare <input name="bot-field"></label></p>
+      <div class="grid">
+        <label>Nome (opzionale)<input type="text" name="nome" maxlength="60"></label>
+        <label>Categoria*<select name="categoria" required>
+          <option value="">Scegli…</option><option>Cibo &amp; Drink</option><option>Cultura &amp; Musei</option>
+          <option>Natura &amp; Parchi</option><option>Esperienze &amp; Tour</option><option>Eventi</option><option>Gemme nascoste</option>
+        </select></label>
+      </div>
+      <label>Luogo / zona<input type="text" name="luogo" maxlength="120" placeholder="Es. Piazza delle Erbe"></label>
+      <label>Link Google Maps (opzionale)<input type="url" name="link" placeholder="https://maps.app.goo.gl/..."></label>
+      <label>Consiglio*<textarea name="consiglio" rows="4" minlength="10" maxlength="600" required placeholder="Cosa non perdere? Un piatto, un posto, un orario, un trucco…"></textarea></label>
+      <label class="consenso"><input type="checkbox" name="consenso" required> Acconsento alla pubblicazione del testo sul sito.</label>
+      <button type="submit" class="btn">Invia</button>
+    </form>
+    <p class="muted">Nota: i suggerimenti inviati qui non vengono mostrati automaticamente in questa pagina per mantenere tutto gratuito. Li moderiamo e li aggiungiamo noi nella lista.</p>
+  </section>
+
+  <!-- BOARD: elenco statico (facoltativo). Con JS potrai filtrare/ricercare anche qui in locale -->
+  <section class="board">
+    <h2>Consigli della community (moderati)</h2>
+    <div class="toolbar card">
+      <input id="search" type="search" placeholder="Cerca per parola o luogo…">
+      <select id="filter-category" aria-label="Filtra per categoria">
+        <option value="">Tutte le categorie</option>
+        <option>Cibo &amp; Drink</option>
+        <option>Cultura &amp; Musei</option>
+        <option>Natura &amp; Parchi</option>
+        <option>Esperienze &amp; Tour</option>
+        <option>Eventi</option>
+        <option>Gemme nascoste</option>
+      </select>
+      <select id="sort" aria-label="Ordina">
+        <option value="newest">Più recenti</option>
+        <option value="az">A → Z (luogo)</option>
+      </select>
+    </div>
+    <div id="tips" class="tips-grid" role="list"></div>
+    <template id="tip-template">
+      <article class="tip card" role="listitem">
+        <div class="tip-head">
+          <span class="cat"></span><time class="when" datetime=""></time>
+        </div>
+        <h3 class="place"></h3>
+        <p class="text"></p>
+        <div class="meta">
+          <span class="author"></span>
+          <a class="map" target="_blank" rel="noopener nofollow ugc">Apri in Maps</a>
+        </div>
+      </article>
+    </template>
+    <p id="empty" class="muted" hidden>Nessun consiglio trovato con questi filtri.</p>
+  </section>
+
+  <footer class="footer">
+    <small>&copy; <span id="year"></span> — Bacheca ospiti</small>
+  </footer>
+</main>
+
+<script>window.ENABLE_NETLIFY_LIST=false;</script>
+<script src="./bacheca_data.js"></script>
+<script src="./bacheca.js" defer></script>
+</body>
+</html>

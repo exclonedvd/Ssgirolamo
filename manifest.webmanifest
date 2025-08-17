@@ -1,0 +1,53 @@
+{
+  "name": "Agriturismo Corte San Girolamo",
+  "short_name": "San Girolamo",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2f5d3a",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "travel",
+    "lodging",
+    "hotel"
+  ],
+  "shortcuts": [
+    {
+      "name": "Chiama",
+      "short_name": "Chiama",
+      "url": "tel:+393478008505"
+    },
+    {
+      "name": "Indicazioni",
+      "short_name": "Mappa",
+      "url": "https://www.google.com/maps/dir/?api=1&destination=Str.+S.+Girolamo,+1,+46100+Mantova+MN"
+    },
+    {
+      "name": "Prenota",
+      "short_name": "Prenota",
+      "url": "#booking"
+    }
+  ],
+  "description": "Camere, colazioni ed esperienze autentiche a Mantova."
+}
