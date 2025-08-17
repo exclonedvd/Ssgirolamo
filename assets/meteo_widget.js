@@ -1,4 +1,4 @@
-/*! Meteo — Scheda (icone piccole, 2 per riga, titolo con icona) */
+/*! Meteo — Scheda compatta (1 riga, 5 giorni, icone+temperatura) */
 (function(){
   function ready(fn){ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fn);} else {fn();} }
   function findMyScript(){
@@ -8,11 +8,6 @@
       if(el.hasAttribute('data-target') || src.indexOf('meteo_widget.js')>=0) return el;
     }
     return null;
-  }
-  function chunk(arr, size){
-    var out=[], i=0;
-    while(i < arr.length){ out.push(arr.slice(i, i+=size)); }
-    return out;
   }
   function iconNameFor(code){
     if(code===0) return 'sun';
@@ -28,9 +23,8 @@
     if(code===96||code===99) return 'hail';
     return 'cloud';
   }
-  // colored SVGs (self-contained, no external css)
   function iconSvg(name, size){
-    var w = parseInt(size,10); if(!(w>0)) w = 18;
+    var w = parseInt(size,10); if(!(w>0)) w = 16;
     var wh = ' width="'+w+'" height="'+w+'"';
     var c = {
       sun:'#FFC107', cloud:'#90A4AE', fog:'#B0BEC5', drop:'#42A5F5', snow:'#90CAF9', storm:'#FDD835', hail:'#90CAF9'
@@ -57,10 +51,10 @@
       var target=document.querySelector(targetSel); if(!target) return;
       var lat=s.getAttribute('data-lat'), lon=s.getAttribute('data-lon'); if(!lat||!lon) return;
       var city=s.getAttribute('data-city')||'';
-      var days=parseInt(s.getAttribute('data-days')||'7',10); if(!(days>0)) days=7;
+      var days=parseInt(s.getAttribute('data-days')||'5',10); if(!(days>0)) days=5;
       var mode=(s.getAttribute('data-mode')||'range').toLowerCase(); // 'range' | 'max' | 'min'
-      var iconSize=s.getAttribute('data-icon')||'18'; // px
-      var titleIconSize=s.getAttribute('data-title-icon')||'16';
+      var iconSize=s.getAttribute('data-icon')||'16';
+      var titleIconSize=s.getAttribute('data-title-icon')||'14';
 
       var url = 'https://api.open-meteo.com/v1/forecast'
         + '?latitude='+encodeURIComponent(lat)
@@ -75,48 +69,27 @@
           var len=Math.min(days,(d.time||[]).length);
           if(!len){ target.innerHTML=''; return; }
 
-          function dayLabel(iso){
-            try{ return new Date(iso+'T00:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'2-digit'}); }
-            catch(e){ return iso; }
-          }
-
-          var items = [];
+          var html='';
+          html+='<div class="container"><div class="card">';
+          html+='<h3 class="title"><span class="title-icon" aria-hidden="true">'
+              + iconSvg('title', titleIconSize)
+              + '</span> Meteo '+(city?city:'')+'</h3>';
+          // singola riga, orizzontale, scrollabile se serve (inline style minimo per forzare la riga)
+          html+='<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;">';
           for(var i=0;i<len;i++){
             var code=d.weathercode[i];
             var tmin=Math.round(d.temperature_2m_min[i]);
             var tmax=Math.round(d.temperature_2m_max[i]);
             var tempTxt = (mode==='max') ? (tmax+'°')
                           : (mode==='min') ? (tmin+'°')
-                          : (tmin+'° / '+tmax+'°');
-            items.push({
-              label: dayLabel(d.time[i]),
-              icon: iconSvg(iconNameFor(code), iconSize),
-              temp: tempTxt
-            });
+                          : (tmin+'°/'+tmax+'°');
+            html+='<div class="chip" role="listitem">'
+                +  '<span class="chip-icon" aria-hidden="true">'+iconSvg(iconNameFor(code), iconSize)+'</span> '
+                +  '<span class="chip-temp">'+tempTxt+'</span>'
+                +'</div>';
           }
-
-          var rows = chunk(items, 2); // max 2 per riga
-          var html='';
-          html+='<div class="container"><div class="card">';
-          html+='<h3 class="title"><span class="title-icon" aria-hidden="true">'
-              + iconSvg('title', titleIconSize)
-              + '</span> Meteo '+(city?city:'')+'</h3>';
-
-          for(var r=0;r<rows.length;r++){
-            html+='<div class="chips" role="list">';
-            var row = rows[r];
-            for(var j=0;j<row.length;j++){
-              var it=row[j];
-              html+='<div class="chip" role="listitem">'
-                  +  '<div class="chip-line"><strong>'+it.label+'</strong></div>'
-                  +  '<div class="chip-line"><span class="chip-icon" aria-hidden="true">'+it.icon+'</span> '
-                  +    '<span class="chip-temp">'+it.temp+'</span></div>'
-                  +'</div>';
-            }
-            html+='</div>';
-          }
-
-          html+='</div></div>';
+          html+='</div>'; // chips
+          html+='</div></div>'; // card/container
           target.innerHTML=html;
         })
         .catch(function(err){ console.warn('[meteo_widget] fetch fallita',err); });
