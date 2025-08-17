@@ -1,4 +1,4 @@
-/*! Meteo — Rescue widget (7 giorni, 1 riga scrollabile, robust, compatto) */
+/*! Meteo — Fix 7g row (no 'time' in daily, better errors) */
 (function(){
   function ready(fn){ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fn);} else {fn();} }
   function findMyScript(){
@@ -46,55 +46,43 @@
       return a[d.getDay()];
     }catch(e){ return iso; }
   }
-  function ensureTarget(sel, autoinject){
-    var el = document.querySelector(sel);
-    if(!el && autoinject){
-      el = document.createElement('section');
-      el.id = sel.replace(/^#/,'');
-      document.body.appendChild(el);
-    }
-    return el;
-  }
-  function showPlaceholder(target, city, titleIconSize){
-    target.innerHTML =
-      '<div class="container"><div class="card">'
-      + '<h3 class="title"><span class="title-icon" aria-hidden="true">'+iconSvg('title', titleIconSize)+'</span> Meteo '+(city||'')+'</h3>'
-      + '<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;">'
-      +   '<div class="chip" role="listitem"><span class="chip-temp">caricamento…</span></div>'
-      + '</div></div></div>';
-  }
   function render(){
     try{
       var s=findMyScript(); if(!s) return;
       var targetSel=s.getAttribute('data-target')||'#meteo';
-      var autoinject = (s.getAttribute('data-autoinject')||'false').toLowerCase()==='true';
-      var target=ensureTarget(targetSel, autoinject); if(!target){ console.warn('[meteo_widget] target non trovato:', targetSel); return; }
-      var lat=s.getAttribute('data-lat'), lon=s.getAttribute('data-lon'); if(!lat||!lon){ target.innerHTML=''; return; }
+      var target=document.querySelector(targetSel); if(!target) return;
+      var lat=s.getAttribute('data-lat'), lon=s.getAttribute('data-lon'); if(!lat||!lon){ target.innerHTML='<div class="container"><div class="card">Meteo non configurato</div></div>'; return; }
       var city=s.getAttribute('data-city')||'';
       var days=parseInt(s.getAttribute('data-days')||'7',10); if(!(days>0)) days=7;
       var mode=(s.getAttribute('data-mode')||'range').toLowerCase();
       var iconSize=s.getAttribute('data-icon')||'16';
       var titleIconSize=s.getAttribute('data-title-icon')||'14';
 
-      showPlaceholder(target, city, titleIconSize);
+      // Placeholder immediato
+      target.innerHTML = '<div class="container"><div class="card"><h3 class="title"><span class="title-icon" aria-hidden="true">'
+        + iconSvg('title', titleIconSize) + '</span> Meteo '+(city||'')+'</h3>'
+        + '<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;"><div class="chip">caricamento…</div></div></div></div>';
 
       var url = 'https://api.open-meteo.com/v1/forecast'
         + '?latitude='+encodeURIComponent(lat)
         + '&longitude='+encodeURIComponent(lon)
-        + '&daily=weathercode,temperature_2m_max,temperature_2m_min,time'
+        + '&daily=weathercode,temperature_2m_max,temperature_2m_min'
         + '&forecast_days='+encodeURIComponent(days)
         + '&timezone=auto';
 
       fetch(url,{cache:'no-store'})
         .then(function(r){
-          if(!r.ok) throw new Error('HTTP '+r.status);
+          if(!r.ok){
+            throw new Error('HTTP '+r.status);
+          }
           return r.json();
         })
         .then(function(data){
-          var d=(data&&data.daily)||{};
-          var len=Math.min(days,(d.time||[]).length);
-          if(!len){ target.querySelector('.chips').innerHTML='<div class="chip"><span class="chip-temp">Nessun dato</span></div>'; return; }
-
+          if(!data || !data.daily || !data.daily.time){
+            throw new Error('No daily data');
+          }
+          var d=data.daily;
+          var len=Math.min(days,d.time.length);
           var html='';
           html+='<div class="container"><div class="card">';
           html+='<h3 class="title"><span class="title-icon" aria-hidden="true">'
@@ -116,10 +104,8 @@
           target.innerHTML=html;
         })
         .catch(function(err){
-          console.warn('[meteo_widget] errore fetch', err);
-          var chips = target.querySelector('.chips');
-          if(chips) chips.innerHTML='<div class="chip"><span class="chip-temp">Errore meteo</span></div>';
-          else target.innerHTML='<div class="container"><div class="card"><div class="chip">Errore meteo</div></div></div>';
+          console.warn('[meteo_widget] errore', err);
+          target.innerHTML = '<div class="container"><div class="card"><h3 class="title">Meteo '+(city||'')+'</h3><div class="chip">Errore meteo ('+ (err && err.message ? err.message : 'errore') +')</div></div></div>';
         });
     }catch(e){
       console.warn('[meteo_widget] errore generale', e);
