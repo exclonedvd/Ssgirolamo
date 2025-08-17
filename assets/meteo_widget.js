@@ -1,4 +1,4 @@
-/*! Meteo — Fix 7g row (no 'time' in daily, better errors) */
+/*! Meteo — 7gg, riga scrollabile, in chip: sopra data (dd/mm), sotto icona+temperatura, con indicatore scroll */
 (function(){
   function ready(fn){ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",fn);} else {fn();} }
   function findMyScript(){
@@ -39,11 +39,12 @@
     };
     return icons[name] || icons.cloud;
   }
-  function dayShort3(iso){
+  function fmtDM(iso){
     try{
-      var d = new Date(iso+'T00:00:00');
-      var a = ['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
-      return a[d.getDay()];
+      var d=new Date(iso+'T00:00:00');
+      var dd=('0'+d.getDate()).slice(-2);
+      var mm=('0'+(d.getMonth()+1)).slice(-2);
+      return dd+'/'+mm;
     }catch(e){ return iso; }
   }
   function render(){
@@ -57,8 +58,9 @@
       var mode=(s.getAttribute('data-mode')||'range').toLowerCase();
       var iconSize=s.getAttribute('data-icon')||'16';
       var titleIconSize=s.getAttribute('data-title-icon')||'14';
+      var hint=(s.getAttribute('data-hint')||'true').toLowerCase()==='true';
 
-      // Placeholder immediato
+      // Placeholder
       target.innerHTML = '<div class="container"><div class="card"><h3 class="title"><span class="title-icon" aria-hidden="true">'
         + iconSvg('title', titleIconSize) + '</span> Meteo '+(city||'')+'</h3>'
         + '<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;"><div class="chip">caricamento…</div></div></div></div>';
@@ -71,45 +73,45 @@
         + '&timezone=auto';
 
       fetch(url,{cache:'no-store'})
-        .then(function(r){
-          if(!r.ok){
-            throw new Error('HTTP '+r.status);
-          }
-          return r.json();
-        })
+        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
         .then(function(data){
-          if(!data || !data.daily || !data.daily.time){
-            throw new Error('No daily data');
-          }
+          if(!data || !data.daily || !data.daily.time){ throw new Error('No daily data'); }
           var d=data.daily;
           var len=Math.min(days,d.time.length);
+
           var html='';
-          html+='<div class="container"><div class="card">';
+          html+='<div class="container"><div class="card" style="position:relative;">';
           html+='<h3 class="title"><span class="title-icon" aria-hidden="true">'
               + iconSvg('title', titleIconSize)
               + '</span> Meteo '+(city?city:'')+'</h3>';
-          html+='<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+          // wrapper riga con possibile indicatore scroll
+          html+='<div class="chips" role="list" style="display:flex;gap:.5rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;">';
           for(var i=0;i<len;i++){
             var code=d.weathercode[i];
             var tmin=Math.round(d.temperature_2m_min[i]);
             var tmax=Math.round(d.temperature_2m_max[i]);
             var tempTxt = (mode==='max') ? (tmax+'°') : (mode==='min') ? (tmin+'°') : (tmin+'°/'+tmax+'°');
-            html+='<div class="chip" role="listitem" style="flex:0 0 auto; display:flex; align-items:center; gap:.35rem;">'
-                +  '<span class="chip-day"><strong>'+dayShort3(d.time[i])+'</strong></span>'
-                +  '<span class="chip-icon" aria-hidden="true">'+iconSvg(iconNameFor(code), iconSize)+'</span>'
-                +  '<span class="chip-temp">'+tempTxt+'</span>'
+            html+='<div class="chip" role="listitem" style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:.25rem;scroll-snap-align:start;">'
+                +  '<div class="chip-line"><strong>'+fmtDM(d.time[i])+'</strong></div>'
+                +  '<div class="chip-line" style="display:flex;align-items:center;gap:.35rem;">'
+                +    '<span class="chip-icon" aria-hidden="true">'+iconSvg(iconNameFor(code), iconSize)+'</span>'
+                +    '<span class="chip-temp">'+tempTxt+'</span>'
+                +  '</div>'
                 +'</div>';
           }
-          html+='</div></div></div>';
+          html+='</div>'; // chips
+          if(hint){
+            // Indicatore scroll: leggero gradiente a destra + icona ↔︎ in basso a destra
+            html+='<div aria-hidden="true" style="position:absolute;right:0;top:3.25rem;width:24px;height:calc(100% - 3.25rem);background:linear-gradient(to left, rgba(255,255,255,0.95), rgba(255,255,255,0));pointer-events:none;"></div>';
+            html+='<div aria-hidden="true" style="position:absolute;right:.5rem;bottom:.5rem;font-size:.8rem;opacity:.6;">⟷</div>';
+          }
+          html+='</div></div>'; // card/container
           target.innerHTML=html;
         })
         .catch(function(err){
-          console.warn('[meteo_widget] errore', err);
-          target.innerHTML = '<div class="container"><div class="card"><h3 class="title">Meteo '+(city||'')+'</h3><div class="chip">Errore meteo ('+ (err && err.message ? err.message : 'errore') +')</div></div></div>';
+          target.innerHTML = '<div class="container"><div class="card"><h3 class="title">Meteo '+(city||'')+'</h3><div class="chip">Errore meteo ('+(err&&err.message?err.message:'errore')+')</div></div></div>';
         });
-    }catch(e){
-      console.warn('[meteo_widget] errore generale', e);
-    }
+    }catch(e){ console.warn('[meteo_widget] errore generale', e); }
   }
   ready(render);
 })();
