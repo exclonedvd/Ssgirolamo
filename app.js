@@ -946,48 +946,42 @@ function injectWhatsAppButton(){
 })();
 
 
-
-
-
-/* ===== Overlay Manager (mobile-safe) ===== */
+/* ===== Overlay Manager (mobile-safe, scoped) ===== */
 (function(){
   if (window.__overlayManagerInstalled) return;
   window.__overlayManagerInstalled = true;
 
-  function isOverlay(el){ return el && el.classList && el.classList.contains('lightbox'); }
-  function getOpenOverlays(){ return Array.prototype.slice.call(document.querySelectorAll('.lightbox.open')); }
+  var MANAGED = new Set(["bookingOverlay","bookingFormOverlay","meteoOverlay","doOverlay","eatOverlay"]);
 
-  function openOverlay(id, withHistory=true){
+  function isManagedOverlay(el){ return el && el.id && MANAGED.has(el.id); }
+  function getOpenManaged(){ return Array.prototype.slice.call(document.querySelectorAll(MANAGED_SELECTOR)).filter(function(el){return el.classList.contains('open');}); }
+  var MANAGED_SELECTOR = "#bookingOverlay,#bookingFormOverlay,#meteoOverlay,#doOverlay,#eatOverlay";
+
+  function openOverlay(id, withHistory){
     var ov = document.getElementById(id);
-    if(!isOverlay(ov)) return;
+    if(!isManagedOverlay(ov)) return;
     // Close others first
-    getOpenOverlays().forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
+    getOpenManaged().forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
     ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
-    // History state for Back button
+    // History push for back button
     try{ if(withHistory && 'pushState' in history){ history.pushState({overlay:id}, '', location.pathname + location.search + '#' + id); } }catch(e){}
-    // Lazy loaders
     if (id === 'meteoOverlay' && typeof window.loadMeteo === 'function'){ window.loadMeteo(); }
   }
 
-  function closeOverlaysFromHistory(){
-    // Called on popstate
-    getOpenOverlays().forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
-  }
-
-  function closeAllOverlays(){
-    // Explicit close (button/click on backdrop). Also pop history if our state on top.
-    var open = getOpenOverlays();
+  function closeManagedOverlays(popHistory){
+    var open = getOpenManaged();
     open.forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
+    // Only pop if we have an overlay state
     try{
-      if (history.state && history.state.overlay){
+      if(popHistory && history.state && history.state.overlay){
         history.back();
       }
     }catch(e){}
   }
-  window.closeAllOverlays = closeAllOverlays;
+  window.closeAllOverlays = function(){ closeManagedOverlays(true); };
   window.openOverlay = openOverlay;
 
-  // Delegated clicks
+  // Delegated clicks (only for our triggers)
   document.addEventListener('click', function(e){
     var opener = e.target.closest('[data-overlay-open]');
     if(opener){
@@ -1000,37 +994,36 @@ function injectWhatsAppButton(){
     if(closer){
       e.preventDefault();
       e.stopPropagation();
-      closeAllOverlays();
+      closeManagedOverlays(true);
       return;
     }
-    // Backdrop click closes overlay
-    var lb = e.target.classList && e.target.classList.contains('lightbox') ? e.target : null;
-    if(lb && isOverlay(lb)){
+    // Backdrop click closes ONLY our managed overlays
+    var lb = e.target;
+    if(lb && lb.classList && lb.classList.contains('lightbox') && isManagedOverlay(lb)){
       e.preventDefault();
-      closeAllOverlays();
+      closeManagedOverlays(true);
       return;
     }
-    // Neutralize anchors with href="#"
-    var a = e.target.closest('a[href="#"]');
-    if(a){ e.preventDefault(); }
+    // Do NOT block generic anchors anymore (href="#"), unless they're overlay triggers (handled above)
   }, {passive:false});
 
-  // ESC to close
+  // ESC to close only our overlays
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){ closeAllOverlays(); }
+    if(e.key === 'Escape'){ closeManagedOverlays(false); }
   });
 
-  // Back button (history) closes overlays (if we pushed a state)
-  window.addEventListener('popstate', function(e){ closeOverlaysFromHistory(); });
-
-  // On load: if hash already targets an overlay, open it without pushing history
-  window.addEventListener('load', function(){
-    var h = location.hash.replace('#','');
-    if(h){
-      var ov = document.getElementById(h);
-      if(isOverlay(ov)){
-        openOverlay(h, false);
-      }
+  // Back button: if overlay state present, just close; otherwise let browser go back
+  window.addEventListener('popstate', function(e){
+    if(e && e.state && e.state.overlay){
+      closeManagedOverlays(false);
     }
   });
+
+  // On load: if hash is a managed overlay, open it (no push)
+  window.addEventListener('load', function(){
+    var h = location.hash.replace('#','');
+    var el = document.getElementById(h);
+    if(isManagedOverlay(el)){ openOverlay(h, false); }
+  });
 })();
+
