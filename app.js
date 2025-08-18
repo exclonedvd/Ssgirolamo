@@ -947,3 +947,90 @@ function injectWhatsAppButton(){
 
 
 
+
+
+/* ===== Overlay Manager (mobile-safe) ===== */
+(function(){
+  if (window.__overlayManagerInstalled) return;
+  window.__overlayManagerInstalled = true;
+
+  function isOverlay(el){ return el && el.classList && el.classList.contains('lightbox'); }
+  function getOpenOverlays(){ return Array.prototype.slice.call(document.querySelectorAll('.lightbox.open')); }
+
+  function openOverlay(id, withHistory=true){
+    var ov = document.getElementById(id);
+    if(!isOverlay(ov)) return;
+    // Close others first
+    getOpenOverlays().forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
+    ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
+    // History state for Back button
+    try{ if(withHistory && 'pushState' in history){ history.pushState({overlay:id}, '', location.pathname + location.search + '#' + id); } }catch(e){}
+    // Lazy loaders
+    if (id === 'meteoOverlay' && typeof window.loadMeteo === 'function'){ window.loadMeteo(); }
+  }
+
+  function closeOverlaysFromHistory(){
+    // Called on popstate
+    getOpenOverlays().forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
+  }
+
+  function closeAllOverlays(){
+    // Explicit close (button/click on backdrop). Also pop history if our state on top.
+    var open = getOpenOverlays();
+    open.forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
+    try{
+      if (history.state && history.state.overlay){
+        history.back();
+      }
+    }catch(e){}
+  }
+  window.closeAllOverlays = closeAllOverlays;
+  window.openOverlay = openOverlay;
+
+  // Delegated clicks
+  document.addEventListener('click', function(e){
+    var opener = e.target.closest('[data-overlay-open]');
+    if(opener){
+      e.preventDefault();
+      e.stopPropagation();
+      openOverlay(opener.getAttribute('data-overlay-open'), true);
+      return;
+    }
+    var closer = e.target.closest('[data-overlay-close]');
+    if(closer){
+      e.preventDefault();
+      e.stopPropagation();
+      closeAllOverlays();
+      return;
+    }
+    // Backdrop click closes overlay
+    var lb = e.target.classList && e.target.classList.contains('lightbox') ? e.target : null;
+    if(lb && isOverlay(lb)){
+      e.preventDefault();
+      closeAllOverlays();
+      return;
+    }
+    // Neutralize anchors with href="#"
+    var a = e.target.closest('a[href="#"]');
+    if(a){ e.preventDefault(); }
+  }, {passive:false});
+
+  // ESC to close
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ closeAllOverlays(); }
+  });
+
+  // Back button (history) closes overlays (if we pushed a state)
+  window.addEventListener('popstate', function(e){ closeOverlaysFromHistory(); });
+
+  // On load: if hash already targets an overlay, open it without pushing history
+  window.addEventListener('load', function(){
+    var h = location.hash.replace('#','');
+    if(h){
+      var ov = document.getElementById(h);
+      if(isOverlay(ov)){
+        openOverlay(h, false);
+      }
+    }
+  });
+})();

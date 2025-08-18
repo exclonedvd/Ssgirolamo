@@ -129,7 +129,7 @@ if ("serviceWorker" in navigator) {
 <button aria-controls="drawer" aria-expanded="false" aria-label="Apri menu" id="menuBtn"><span class="bar"></span></button>
 <aside aria-hidden="true" class="drawer" id="drawer">
 <header>Agriturismo Corte San Girolamo</header>
-<nav><a data-emoji="rooms" data-i18n="nav_camere" href="#camere">Camere</a><a data-emoji="experiences" data-i18n="nav_esperienze" href="#esperienze">Esperienze</a><a data-emoji="planner" href="#planner">🧭 <span>Itinerario su misura</span></a><a data-emoji="map" data-i18n="nav_mappa" href="#mappa">Mappa</a><a data-emoji="request" data-i18n="nav_prenotazioni" href="#" id="navBooking">Richiesta disponibilità</a></nav>
+<nav><a data-emoji="rooms" data-i18n="nav_camere" href="#camere">Camere</a><a data-emoji="experiences" data-i18n="nav_esperienze" href="#esperienze">Esperienze</a><a data-emoji="planner" href="#planner">🧭 <span>Itinerario su misura</span></a><a data-emoji="map" data-i18n="nav_mappa" href="#mappa">Mappa</a><a data-emoji="request" data-i18n="nav_prenotazioni" data-overlay-open="bookingOverlay" href="#" id="navBooking">Richiesta disponibilità</a></nav>
 <div class="social">
 <a aria-label="Instagram" href="https://www.instagram.com/cortesangirolamo/?igsh=MTByZDhoNjFrcnp6OA==" rel="noopener noreferrer" target="_blank"><svg height="22" viewbox="0 0 24 24" width="22"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm10 2H7a3 3 0 00-3 3v10a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3zm-5 3.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm5.8-.9a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2z" fill="currentColor"></path></svg></a>
 <a aria-label="Facebook" href="https://www.facebook.com/share/16ZMHcQUD4/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank"><svg height="22" viewbox="0 0 24 24" width="22"><path d="M13.5 22V12h3l.5-4h-3.5V6.1c0-1 .3-1.6 1.7-1.6H17V1.1C16.6 1 15.6 1 14.4 1 11.8 1 10 2.7 10 5.7V8H7v4h3v10h3.5z" fill="currentColor"></path></svg></a>
@@ -141,7 +141,7 @@ if ("serviceWorker" in navigator) {
 </header>
 <main id="main">
 <section class="container" id="camere">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2><button class="btn outline" id="bookingOpen">Richiedi disponibilità</button></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2><button class="btn outline" data-overlay-open="bookingOverlay" id="bookingOpen">Richiedi disponibilità</button></div>
 <div class="card">
 <p data-i18n="camere_text">Camere accoglienti in stile rurale mantovano, ognuna con bagno privato, aria condizionata e Wi‑Fi. Disponibili soluzioni per famiglie e ospiti business.</p>
 <div class="badge" data-i18n="camere_feat_rooms">🛏️ 10 camere</div>
@@ -183,9 +183,9 @@ if ("serviceWorker" in navigator) {
 <section class="container" id="galleria">
 <h2 class="section-title" data-emoji="gallery" data-i18n="galleria_title">Galleria</h2>
 <div class="gallery" id="gallery"></div>
-</section><section class="container" id="scopriMantova"><h2 class="section-title">Scopri Mantova</h2><div class="grid cols-2"><div class="card"><h3>Cosa fare a Mantova</h3><p>Attività, musei, passeggiate e tour.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="doOpen">Apri attività</button></div></div><div class="card"><h3>Dove mangiare a Mantova</h3><p>Trattorie, ristoranti e specialità locali.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="eatOpen">Apri ristoranti</button></div></div></div></section>
+</section><section class="container" id="scopriMantova"><h2 class="section-title">Scopri Mantova</h2><div class="grid cols-2"><div class="card"><h3>Cosa fare a Mantova</h3><p>Attività, musei, passeggiate e tour.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-overlay-open="doOverlay" id="doOpen">Apri attività</button></div></div><div class="card"><h3>Dove mangiare a Mantova</h3><p>Trattorie, ristoranti e specialità locali.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-overlay-open="eatOverlay" id="eatOpen">Apri ristoranti</button></div></div></div></section>
 <section class="container" id="mappa">
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 class="section-title" data-emoji="map" data-i18n="mappa_title">Mappa</h2><button class="btn" id="openMeteo" style="padding:6px 10px;font-size:.9rem">🌤️ Meteo</button></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px"><h2 class="section-title" data-emoji="map" data-i18n="mappa_title">Mappa</h2><button class="btn" data-overlay-open="meteoOverlay" id="openMeteo" style="padding:6px 10px;font-size:.9rem">🌤️ Meteo</button></div>
 <div class="card">
 <p><svg height="20" viewbox="0 0 24 24" width="20"><path d="M9.5 3l5 2 5-2v18l-5 2-5-2-5 2V5l5-2zM9 5.3L6 6.5v12.2l3-1.2V5.3zm2 0v12.2l3 1.2V6.5l-3-1.2zm8 12.2V5.3l-3 1.2v12.2l3-1.2z" fill="currentColor"></path></svg> Str. S. Girolamo, 1, 46100 Mantova MN</p>
 <div style="aspect-ratio:16/9;">
@@ -370,7 +370,7 @@ if ("serviceWorker" in navigator) {
 <button aria-label="Successivo" class="next" id="lbNext">›</button>
 </div>
 <div aria-hidden="true" aria-modal="true" class="lightbox" id="eatOverlay" role="dialog">
-<button aria-label="Chiudi" class="controls close" id="eatClose">✕</button>
+<button aria-label="Chiudi" class="controls close" data-overlay-close="1" id="eatClose">✕</button>
 <div class="card" style="width:min(1024px, 96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
 <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
 <strong data-i18n="eat_title" style="font-size:18px">Dove mangiare a Mantova 🍽️</strong>
@@ -379,7 +379,7 @@ if ("serviceWorker" in navigator) {
 </div>
 </div>
 <div aria-hidden="true" aria-modal="true" class="lightbox" id="doOverlay" role="dialog">
-<button aria-label="Chiudi" class="controls close" id="doClose">✕</button>
+<button aria-label="Chiudi" class="controls close" data-overlay-close="1" id="doClose">✕</button>
 <div class="card" style="width:min(1024px, 96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
 <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
 <strong data-i18n="do_title" style="font-size:18px">Cosa fare a Mantova 🎒</strong>
@@ -448,115 +448,8 @@ if ("serviceWorker" in navigator) {
 </script>
 <script data-target="#bacheca" data-title="" src="assets/bacheca_widget.js?v=20250817"></script>
 <script data-city="Mantova" data-lat="45.156" data-lon="10.791" data-target="#meteo" src="assets/meteo_widget.js?v=20250817"></script>
-<div aria-hidden="true" aria-modal="true" class="lightbox" id="bookingOverlay" role="dialog"><button aria-label="Chiudi" class="controls close" id="bookingClose">✕</button><div class="card" style="width:min(520px,92vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px;text-align:center"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;justify-content:center"><strong>Richiesta disponibilità</strong></div><p>Scegli il canale che preferisci. Rispondiamo di solito entro poche ore.</p><div class="small"><ul style="list-style:none;padding:0;margin:8px 0 12px"><li>Lunedì–Venerdì: 09:00–20:00</li><li>Sabato–Domenica: 09:00–19:00</li></ul></div><div style="display:flex;justify-content:center;align-items:center;width:100%;"><div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:8px"><a class="btn whatsapp" href="https://wa.me/393478008505" rel="noopener" target="_blank">💬 WhatsApp</a><a class="btn primary" href="#" id="openBookingForm">📝 Compila modulo</a><a class="btn" href="tel:+393478008505">📞 Chiamaci</a></div></div></div></div><script>
-(function(){
-  function openBookingOverlay(){
-    var overlay = document.getElementById('bookingOverlay');
-    if(overlay){
-      overlay.classList.add('open');
-      overlay.setAttribute('aria-hidden','false');
-    }
-  }
-  function closeBookingOverlay(){
-    var overlay = document.getElementById('bookingOverlay');
-    if(overlay){
-      overlay.classList.remove('open');
-      overlay.setAttribute('aria-hidden','true');
-    }
-  }
-  var openBtn = document.getElementById('bookingOpen');
-  if(openBtn){ openBtn.addEventListener('click', function(e){ e.preventDefault(); openBookingOverlay(); }); }
-  var closeBtn = document.getElementById('bookingClose');
-  if(closeBtn){ closeBtn.addEventListener('click', function(){ closeBookingOverlay(); }); }
-  var overlay = document.getElementById('bookingOverlay');
-  if(overlay){
-    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeBookingOverlay(); });
-  }
-  document.addEventListener('keydown', function(e){ 
-    var overlay = document.getElementById('bookingOverlay');
-    if(!overlay) return;
-    if(overlay.classList.contains('open') && e.key==='Escape') closeBookingOverlay();
-  });
-  // Scroll to #booking when clicking "Compila modulo"
-  var toForm = document.getElementById('bookingScrollBtn');
-  if(toForm){
-    toForm.addEventListener('click', function(e){
-      e.preventDefault();
-      closeBookingOverlay();
-      var section = document.getElementById('booking');
-      if(section){ section.scrollIntoView({behavior:'smooth', block:'start'}); }
-    });
-  }
-})();
-    </script><div aria-hidden="true" aria-modal="true" class="lightbox" id="bookingFormOverlay" role="dialog"><button class="controls close" id="bookingFormClose">✕</button><div class="card" style="width:min(600px,92vw);max-height:72vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:10px"><div style="display:flex;align-items:center;justify-content:center;margin-bottom:6px"><h3>📝 Modulo di richiesta</h3></div><form data-netlify="true" method="POST" name="booking_popup" netlify-honeypot="bot-field"><input name="form-name" type="hidden" value="booking_popup"/><p style="display:none"><label></label><input name="bot-field"/></p><div class="inline" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="input" style="margin:6px 0"><label for="pop_name">Nome e cognome</label><input id="pop_name" name="name" placeholder="Mario Rossi" required="" style="width:100%" type="text"/></div><div class="input" style="margin:6px 0"><label for="pop_email">Email</label><input id="pop_email" name="email" placeholder="nome@email.com" required="" style="width:100%" type="email"/></div></div><div class="inline" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="input" style="margin:6px 0"><label data-i18n="checkin_label" for="pop_checkin">Check‑in</label><input id="pop_checkin" name="checkin" required="" style="width:100%" type="date"/></div><div class="input" style="margin:6px 0"><label data-i18n="checkout_label" for="pop_checkout">Check‑out</label><input id="pop_checkout" name="checkout" required="" style="width:100%" type="date"/></div></div><div class="inline" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"><div class="input" style="margin:6px 0"><label data-i18n="adults_label" for="pop_adults">Adulti</label><input id="pop_adults" min="1" name="adults" required="" style="width:100%" type="number" value="2"/></div><div class="input" style="margin:6px 0"><label data-i18n="rooms_label" for="pop_rooms">Camere</label><input id="pop_rooms" min="1" name="rooms" required="" style="width:100%" type="number" value="1"/></div><div class="input" style="margin:6px 0"><label for="pop_phone">Telefono</label><input id="pop_phone" name="phone" placeholder="+39 …" style="width:100%" type="tel"/></div></div><details style="margin:6px 0"><summary>Aggiungi note (facoltativo)</summary><div class="input" style="margin:6px 0"><label data-i18n="message_label" for="pop_message">Messaggio</label><textarea id="pop_message" name="message" placeholder="Esigenze particolari, orari, ecc." rows="3" style="width:100%"></textarea></div></details><div class="input" style="margin:4px 0;text-align:left"><label class="small" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:.85rem;"><input name="consent" required="" type="checkbox"/> Acconsento al trattamento dei dati per la risposta alla richiesta.</label></div><div style="display:flex;justify-content:center;margin-top:6px"><button class="btn" style="background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;border:0" type="submit">Invia richiesta</button></div></form></div></div><script>
-(function(){
-  function openOverlay(id){
-    var el = document.getElementById(id);
-    if(el){ el.classList.add('open'); el.setAttribute('aria-hidden','false'); }
-  }
-  function closeOverlay(id){
-    var el = document.getElementById(id);
-    if(el){ el.classList.remove('open'); el.setAttribute('aria-hidden','true'); }
-  }
-  // Info popup
-  var openInfo = document.getElementById('bookingOpen');
-  if(openInfo){ openInfo.addEventListener('click', function(e){ e.preventDefault(); openOverlay('bookingOverlay'); }); }
-  var info = document.getElementById('bookingOverlay');
-  var infoClose = document.getElementById('bookingClose');
-  if(infoClose){ infoClose.addEventListener('click', function(){ closeOverlay('bookingOverlay'); }); }
-  if(info){ info.addEventListener('click', function(e){ if(e.target===info) closeOverlay('bookingOverlay'); }); }
-  // Open form popup directly
-  var openForm = document.getElementById('openBookingForm');
-  if(openForm){ openForm.addEventListener('click', function(e){ e.preventDefault(); closeOverlay('bookingOverlay'); openOverlay('bookingFormOverlay'); }); }
-  // Form overlay close/backdrop
-  var formOv = document.getElementById('bookingFormOverlay');
-  var formClose = document.getElementById('bookingFormClose');
-  if(formClose){ formClose.addEventListener('click', function(){ closeOverlay('bookingFormOverlay'); }); }
-  if(formOv){ formOv.addEventListener('click', function(e){ if(e.target===formOv) closeOverlay('bookingFormOverlay'); }); }
-  // ESC key
-  document.addEventListener('keydown', function(e){
-    if(e.key!=='Escape') return;
-    if(document.getElementById('bookingFormOverlay') && document.getElementById('bookingFormOverlay').classList.contains('open')){
-      closeOverlay('bookingFormOverlay'); return;
-    }
-    if(document.getElementById('bookingOverlay') && document.getElementById('bookingOverlay').classList.contains('open')){
-      closeOverlay('bookingOverlay'); return;
-    }
-  });
-})();
-</script><div aria-hidden="true" aria-modal="true" class="lightbox" id="meteoOverlay" role="dialog"><button aria-label="Chiudi" class="controls close" id="meteoClose">✕</button><div class="card" style="width:min(520px,92vw);max-height:80vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px;text-align:center"><strong>Meteo Mantova — 5 giorni</strong><div id="meteoWidget" style="margin-top:8px"></div></div></div><script>
-(function(){
-  const LAT = 45.156;  // Mantova
-  const LON = 10.791;
-  const API = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=5`;
-
-  const WMO = {
-    0:"☀️", 1:"🌤️", 2:"⛅", 3:"☁️",
-    45:"🌫️", 48:"🌫️",
-    51:"🌦️", 53:"🌦️", 55:"🌧️",
-    61:"🌧️", 63:"🌧️", 65:"🌧️",
-    66:"🌧️", 67:"🌧️",
-    71:"🌨️", 73:"🌨️", 75:"❄️",
-    80:"🌧️", 81:"🌧️", 82:"🌧️",
-    85:"🌨️", 86:"🌨️",
-    95:"⛈️", 96:"⛈️", 99:"⛈️"
-  };
-  const DAYNAMES = ["Dom","Lun","Mar","Mer","Gio","Ven","Sab"];
-
-  const ov = document.getElementById('meteoOverlay');
-  const openBtn = document.getElementById('openMeteo');
-  const closeBtn = document.getElementById('meteoClose');
-
-  function open(){ closeAllOverlays(); if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); } }
-  function close(){ if(ov){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); } }
-
-  function fmtDay(iso){
-    const d = new Date(iso+"T12:00:00");
-    return DAYNAMES[d.getDay()] + " " + String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0");
-  }
-
-  let loaded = false;
-  async function loadMeteo(){
+<div aria-hidden="true" aria-modal="true" class="lightbox" id="bookingOverlay" role="dialog"><button aria-label="Chiudi" class="controls close" data-overlay-close="1" id="bookingClose">✕</button><div class="card" style="width:min(520px,92vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px;text-align:center"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;justify-content:center"><strong>Richiesta disponibilità</strong></div><p>Scegli il canale che preferisci. Rispondiamo di solito entro poche ore.</p><div class="small"><ul style="list-style:none;padding:0;margin:8px 0 12px"><li>Lunedì–Venerdì: 09:00–20:00</li><li>Sabato–Domenica: 09:00–19:00</li></ul></div><div style="display:flex;justify-content:center;align-items:center;width:100%;"><div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:8px"><a class="btn whatsapp" href="https://wa.me/393478008505" rel="noopener" target="_blank">💬 WhatsApp</a><a class="btn primary" data-overlay-open="bookingFormOverlay" href="#" id="openBookingForm">📝 Compila modulo</a><a class="btn" href="tel:+393478008505">📞 Chiamaci</a></div></div></div></div><div aria-hidden="true" aria-modal="true" class="lightbox" id="bookingFormOverlay" role="dialog"><button class="controls close" data-overlay-close="1" id="bookingFormClose">✕</button><div class="card" style="width:min(600px,92vw);max-height:72vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:10px"><div style="display:flex;align-items:center;justify-content:center;margin-bottom:6px"><h3>📝 Modulo di richiesta</h3></div><form data-netlify="true" method="POST" name="booking_popup" netlify-honeypot="bot-field"><input name="form-name" type="hidden" value="booking_popup"/><p style="display:none"><label></label><input name="bot-field"/></p><div class="inline" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="input" style="margin:6px 0"><label for="pop_name">Nome e cognome</label><input id="pop_name" name="name" placeholder="Mario Rossi" required="" style="width:100%" type="text"/></div><div class="input" style="margin:6px 0"><label for="pop_email">Email</label><input id="pop_email" name="email" placeholder="nome@email.com" required="" style="width:100%" type="email"/></div></div><div class="inline" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><div class="input" style="margin:6px 0"><label data-i18n="checkin_label" for="pop_checkin">Check‑in</label><input id="pop_checkin" name="checkin" required="" style="width:100%" type="date"/></div><div class="input" style="margin:6px 0"><label data-i18n="checkout_label" for="pop_checkout">Check‑out</label><input id="pop_checkout" name="checkout" required="" style="width:100%" type="date"/></div></div><div class="inline" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"><div class="input" style="margin:6px 0"><label data-i18n="adults_label" for="pop_adults">Adulti</label><input id="pop_adults" min="1" name="adults" required="" style="width:100%" type="number" value="2"/></div><div class="input" style="margin:6px 0"><label data-i18n="rooms_label" for="pop_rooms">Camere</label><input id="pop_rooms" min="1" name="rooms" required="" style="width:100%" type="number" value="1"/></div><div class="input" style="margin:6px 0"><label for="pop_phone">Telefono</label><input id="pop_phone" name="phone" placeholder="+39 …" style="width:100%" type="tel"/></div></div><details style="margin:6px 0"><summary>Aggiungi note (facoltativo)</summary><div class="input" style="margin:6px 0"><label data-i18n="message_label" for="pop_message">Messaggio</label><textarea id="pop_message" name="message" placeholder="Esigenze particolari, orari, ecc." rows="3" style="width:100%"></textarea></div></details><div class="input" style="margin:4px 0;text-align:left"><label class="small" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:.85rem;"><input name="consent" required="" type="checkbox"/> Acconsento al trattamento dei dati per la risposta alla richiesta.</label></div><div style="display:flex;justify-content:center;margin-top:6px"><button class="btn" style="background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;border:0" type="submit">Invia richiesta</button></div></form></div></div><div aria-hidden="true" aria-modal="true" class="lightbox" id="meteoOverlay" role="dialog"><button aria-label="Chiudi" class="controls close" data-overlay-close="1" id="meteoClose">✕</button><div class="card" style="width:min(520px,92vw);max-height:80vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px;text-align:center"><strong>Meteo Mantova — 5 giorni</strong><div id="meteoWidget" style="margin-top:8px"></div></div></div><script>(function(){
+async function loadMeteo(){
     if(loaded) return;
     const el = document.getElementById('meteoWidget');
     if(!el) return;
@@ -597,29 +490,9 @@ if ("serviceWorker" in navigator) {
       el.innerHTML = '<div class="small">Impossibile caricare il meteo ora.</div>';
       console.warn(err);
     }
-  }
 
-  if(openBtn){ openBtn.addEventListener('click', function(e){ e.preventDefault(); loadMeteo(); open(); }); }
-  if(closeBtn){ closeBtn.addEventListener('click', close); }
-  if(ov){ ov.addEventListener('click', function(e){ if(e.target===ov) close(); }); }
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-})();
-</script><script>
-(function(){
-  var navBooking = document.getElementById('navBooking');
-  if(navBooking){
-    navBooking.addEventListener('click', function(e){
-      e.preventDefault();
-      closeAllOverlays();
-      var ov = document.getElementById('bookingOverlay');
-      if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); }
-      // Close drawer if open
-      var drawer = document.getElementById('drawer');
-      if(drawer) drawer.classList.remove('open');
-    });
-  }
-})();
-</script><script id="site-animations-js">
+window.loadMeteo = loadMeteo;
+})();</script><script id="site-animations-js">
 (function(){
   // Reveal on scroll
   var targets = Array.prototype.slice.call(document.querySelectorAll('.card, .section-title, section .card'));
