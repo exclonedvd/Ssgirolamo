@@ -946,84 +946,40 @@ function injectWhatsAppButton(){
 })();
 
 
-/* ===== Overlay Manager (mobile-safe, scoped) ===== */
+/* === Overlay bindings (explicit & scoped) === */
 (function(){
-  if (window.__overlayManagerInstalled) return;
-  window.__overlayManagerInstalled = true;
+  var managed = ["bookingOverlay","bookingFormOverlay","meteoOverlay","doOverlay","eatOverlay"];
+  function isManaged(id){ return managed.indexOf(id) !== -1; }
+  function qs(id){ return document.getElementById(id); }
+  function closeAll(){ managed.forEach(function(id){ var el=qs(id); if(el){ el.classList.remove('open'); el.setAttribute('aria-hidden','true'); }}); }
+  function open(id){ if(!isManaged(id)) return; closeAll(); var el=qs(id); if(el){ el.classList.add('open'); el.setAttribute('aria-hidden','false'); if(id==='meteoOverlay' && typeof window.loadMeteo==='function'){ window.loadMeteo(); } } }
 
-  var MANAGED = new Set(["bookingOverlay","bookingFormOverlay","meteoOverlay","doOverlay","eatOverlay"]);
-
-  function isManagedOverlay(el){ return el && el.id && MANAGED.has(el.id); }
-  function getOpenManaged(){ return Array.prototype.slice.call(document.querySelectorAll(MANAGED_SELECTOR)).filter(function(el){return el.classList.contains('open');}); }
-  var MANAGED_SELECTOR = "#bookingOverlay,#bookingFormOverlay,#meteoOverlay,#doOverlay,#eatOverlay";
-
-  function openOverlay(id, withHistory){
-    var ov = document.getElementById(id);
-    if(!isManagedOverlay(ov)) return;
-    // Close others first
-    getOpenManaged().forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
-    ov.classList.add('open'); ov.setAttribute('aria-hidden','false');
-    // History push for back button
-    try{ if(withHistory && 'pushState' in history){ history.pushState({overlay:id}, '', location.pathname + location.search + '#' + id); } }catch(e){}
-    if (id === 'meteoOverlay' && typeof window.loadMeteo === 'function'){ window.loadMeteo(); }
+  function bindOpen(btnId, overlayId){
+    var el = qs(btnId);
+    if(!el) return;
+    el.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); open(overlayId); }, false);
+  }
+  function bindClose(overlayId){
+    var ov = qs(overlayId);
+    if(!ov) return;
+    // close on X
+    var x = ov.querySelector('[data-overlay-close], .controls.close, .close');
+    if(x){ x.addEventListener('click', function(){ closeAll(); }, false); }
+    // close on backdrop
+    ov.addEventListener('click', function(e){ if(e.target === ov){ closeAll(); } }, false);
   }
 
-  function closeManagedOverlays(popHistory){
-    var open = getOpenManaged();
-    open.forEach(function(x){ x.classList.remove('open'); x.setAttribute('aria-hidden','true'); });
-    // Only pop if we have an overlay state
-    try{
-      if(popHistory && history.state && history.state.overlay){
-        history.back();
-      }
-    }catch(e){}
-  }
-  window.closeAllOverlays = function(){ closeManagedOverlays(true); };
-  window.openOverlay = openOverlay;
+  // Buttons
+  bindOpen('doOpen','doOverlay');
+  bindOpen('eatOpen','eatOverlay');
+  bindOpen('navDo','doOverlay');
+  bindOpen('navEat','eatOverlay');
+  bindOpen('bookingOpen','bookingOverlay');
+  bindOpen('navBooking','bookingOverlay');
+  bindOpen('openBookingForm','bookingFormOverlay');
+  bindOpen('openMeteo','meteoOverlay');
 
-  // Delegated clicks (only for our triggers)
-  document.addEventListener('click', function(e){
-    var opener = e.target.closest('[data-overlay-open]');
-    if(opener){
-      e.preventDefault();
-      e.stopPropagation();
-      openOverlay(opener.getAttribute('data-overlay-open'), true);
-      return;
-    }
-    var closer = e.target.closest('[data-overlay-close]');
-    if(closer){
-      e.preventDefault();
-      e.stopPropagation();
-      closeManagedOverlays(true);
-      return;
-    }
-    // Backdrop click closes ONLY our managed overlays
-    var lb = e.target;
-    if(lb && lb.classList && lb.classList.contains('lightbox') && isManagedOverlay(lb)){
-      e.preventDefault();
-      closeManagedOverlays(true);
-      return;
-    }
-    // Do NOT block generic anchors anymore (href="#"), unless they're overlay triggers (handled above)
-  }, {passive:false});
-
-  // ESC to close only our overlays
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){ closeManagedOverlays(false); }
-  });
-
-  // Back button: if overlay state present, just close; otherwise let browser go back
-  window.addEventListener('popstate', function(e){
-    if(e && e.state && e.state.overlay){
-      closeManagedOverlays(false);
-    }
-  });
-
-  // On load: if hash is a managed overlay, open it (no push)
-  window.addEventListener('load', function(){
-    var h = location.hash.replace('#','');
-    var el = document.getElementById(h);
-    if(isManagedOverlay(el)){ openOverlay(h, false); }
-  });
+  // Closers
+  managed.forEach(bindClose);
 })();
 
