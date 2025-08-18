@@ -101,7 +101,12 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js");
   });
 }
-</script></head>
+</script><style id="overlay-robust">
+/* Robust overlay behavior on mobile */
+.lightbox{ position:fixed; inset:0; z-index:55; pointer-events:none; opacity:0; visibility:hidden; transition: opacity .22s ease, visibility .22s ease; }
+.lightbox.open{ pointer-events:auto; opacity:1; visibility:visible; }
+#lightbox{ z-index:60; } /* gallery lightbox above others */
+</style></head>
 <body>
 <a class="skip-link" href="#main">Salta al contenuto</a>
 <div class="lang-switch" id="langSwitch"><button class="active" data-lang="it"><svg aria-hidden="true" class="flag-svg" viewbox="0 0 18 12">
@@ -542,7 +547,7 @@ if ("serviceWorker" in navigator) {
   const openBtn = document.getElementById('openMeteo');
   const closeBtn = document.getElementById('meteoClose');
 
-  function open(){ if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); } }
+  function open(){ closeAllOverlays(); if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); } }
   function close(){ if(ov){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); } }
 
   function fmtDay(iso){
@@ -605,6 +610,7 @@ if ("serviceWorker" in navigator) {
   if(navBooking){
     navBooking.addEventListener('click', function(e){
       e.preventDefault();
+      closeAllOverlays();
       var ov = document.getElementById('bookingOverlay');
       if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); }
       // Close drawer if open
@@ -695,5 +701,12 @@ if ("serviceWorker" in navigator) {
       if(drawer) drawer.classList.remove('open');
     });
   }
-</script></body>
+</script><script id="overlay-helper">
+(function(){
+  window.closeAllOverlays = function(){
+    document.querySelectorAll('.lightbox.open').forEach(function(el){
+      el.classList.remove('open'); el.setAttribute('aria-hidden','true');
+    });
+  };
+})();</script></body>
 </html>

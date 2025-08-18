@@ -14,6 +14,14 @@ links.forEach(a=>a.addEventListener('click', ()=>{
 }));
 
 // Smooth scroll
+
+// Close every open overlay (mobile-safe)
+function closeAllOverlays(){
+  document.querySelectorAll('.lightbox.open').forEach(el => {
+    el.classList.remove('open'); el.setAttribute('aria-hidden','true');
+  });
+}
+
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click', (e)=>{
     const id = a.getAttribute('href').slice(1);
@@ -380,7 +388,7 @@ function focusTrap(e){
   const overlay = document.getElementById('eatOverlay');
   const closeBtn = document.getElementById('eatClose');
   if(openBtn && overlay && closeBtn){
-    openBtn.addEventListener('click', async ()=>{
+    openBtn.addEventListener('click', async (e)=>{ e.preventDefault(); e.stopPropagation(); closeAllOverlays();
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden','false');
       setTimeout(initEatMap, 50);
@@ -469,7 +477,7 @@ function telHref(num){ return 'tel:' + (num||'').replace(/\s+/g,''); }
     const overlay = document.getElementById('eatOverlay');
     const closeBtn = document.getElementById('eatClose');
     const listHost = document.getElementById('eatList');
-    overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
+    closeAllOverlays(); overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
     listHost.innerHTML = '<div class="muted">Caricamento…</div>';
     try{
       if(!EAT_DATA){ EAT_DATA = await loadEatData(); }
@@ -565,7 +573,7 @@ function mapUrlDo(address, label){ const q = encodeURIComponent(address || label
   async function openDoList(){
     const overlay = document.getElementById('doOverlay'); const closeBtn = document.getElementById('doClose');
     const host = document.getElementById('doList');
-    overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
+    closeAllOverlays(); overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
     host.innerHTML = '<div class="muted">Caricamento…</div>';
     try{ if(!DO_DATA){ DO_DATA = await loadDoData(); } renderDoCategories(host); } catch(e){ host.innerHTML='<div class="error">Impossibile caricare.</div>'; }
     function close(){ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); }
