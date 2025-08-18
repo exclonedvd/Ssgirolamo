@@ -1029,3 +1029,24 @@ function injectWhatsAppButton(){
   });
 })();
 
+
+
+/* DRAWER SAFE TOGGLER */
+(function(){
+  var drawer = document.getElementById('drawer');
+  var btn = document.getElementById('menuBtn');
+  var backdrop = document.getElementById('drawerBackdrop');
+  function open(){ if(drawer){ drawer.classList.add('open'); } if(backdrop){ backdrop.classList.add('show'); } if(btn){ btn.classList.add('open'); } }
+  function close(){ if(drawer){ drawer.classList.remove('open'); } if(backdrop){ backdrop.classList.remove('show'); } if(btn){ btn.classList.remove('open'); } }
+  if(btn && !btn.__drawerBound){
+    btn.__drawerBound = true;
+    btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); if(drawer && drawer.classList.contains('open')) close(); else open(); }, {passive:false});
+  }
+  if(backdrop && !backdrop.__drawerBound){
+    backdrop.__drawerBound = true;
+    backdrop.addEventListener('click', function(){ close(); }, {passive:true});
+  }
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ close(); } });
+  // If drawer is open due to previous CSS, close it on load
+  window.addEventListener('load', function(){ if(drawer && drawer.classList.contains('open') && !document.body.classList.contains('keepDrawerOpen')){ close(); } });
+})();
