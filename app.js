@@ -983,3 +983,49 @@ function injectWhatsAppButton(){
   managed.forEach(bindClose);
 })();
 
+
+
+/* SAFE MODE GUARDS */
+(function(){
+  if (window.NO_ANIM) {
+    // Remove any pending reveal classes to ensure visible
+    try{ document.querySelectorAll('.reveal').forEach(function(n){ n.classList.add('reveal-in'); }); }catch(e){}
+  }
+})();
+
+
+
+/* SAFE MODE BINDINGS (explicit) */
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function closeAll(){
+    ['bookingOverlay','bookingFormOverlay','meteoOverlay','doOverlay','eatOverlay'].forEach(function(id){
+      var el = byId(id); if(el){ el.classList.remove('open'); el.setAttribute('aria-hidden','true'); }
+    });
+  }
+  function open(id){
+    closeAll();
+    var el = byId(id);
+    if(el){ el.classList.add('open'); el.setAttribute('aria-hidden','false'); if(id==='meteoOverlay' && typeof window.loadMeteo==='function'){ window.loadMeteo(); } }
+  }
+  function bind(btn, id){
+    var el = byId(btn);
+    if(!el) return;
+    if(el.__bound) return; el.__bound = true;
+    el.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); open(id); }, {passive:false});
+  }
+  ['doOpen','navDo'].forEach(function(b){ bind(b,'doOverlay'); });
+  ['eatOpen','navEat'].forEach(function(b){ bind(b,'eatOverlay'); });
+  ['bookingOpen','navBooking'].forEach(function(b){ bind(b,'bookingOverlay'); });
+  bind('openBookingForm','bookingFormOverlay');
+  bind('openMeteo','meteoOverlay');
+
+  // Close buttons and backdrop
+  ['bookingOverlay','bookingFormOverlay','meteoOverlay','doOverlay','eatOverlay'].forEach(function(id){
+    var ov = byId(id); if(!ov) return;
+    var x = ov.querySelector('[data-overlay-close], .controls.close, .close');
+    if(x && !x.__bound){ x.__bound = true; x.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); closeAll(); }, {passive:false}); }
+    ov.addEventListener('click', function(e){ if(e.target === ov){ closeAll(); } }, {passive:true});
+  });
+})();
+

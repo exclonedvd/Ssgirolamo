@@ -113,6 +113,21 @@ if ("serviceWorker" in navigator) {
 }
 /* Keep gallery #lightbox behavior untouched; ensure on top */
 #lightbox { z-index: 60; }
+</style><script>window.NO_ANIM = true;</script><style id="kill-animations">
+/* SAFE MODE: disabilita animazioni/transizioni */
+* { animation: none !important; transition: none !important; }
+.reveal { opacity: 1 !important; transform: none !important; }
+.card:hover { transform: none !important; box-shadow: inherit !important; }
+.btn:hover, .btn:active { transform: none !important; box-shadow: none !important; }
+/* Drawer & map */
+.drawer, .drawer.open { transform: none !important; opacity: 1 !important; }
+#drawerBackdrop { transition: none !important; }
+/* Overlay pop-in */
+.lightbox .card { transform: none !important; opacity: 1 !important; }
+/* Map iframe */
+#mappa iframe.map-anim { opacity: 1 !important; transform: none !important; filter: none !important; }
+/* Ripple */
+.ripple { display: none !important; }
 </style></head>
 <body>
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -369,7 +384,7 @@ if ("serviceWorker" in navigator) {
 </div>
 </div>
 </footer>
-<script defer="defer" src="app.js?v=20250818a"></script>
+<script defer="defer" src="app.js?v=20250818b"></script>
 <div aria-hidden="true" aria-modal="true" class="lightbox" id="lightbox" role="dialog">
 <button aria-label="Chiudi" class="controls close" id="lbClose">✕</button>
 <button aria-label="Precedente" class="prev" id="lbPrev">‹</button>
