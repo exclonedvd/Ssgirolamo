@@ -167,13 +167,13 @@ const I18N = {
     });
   }
 
-  closeBtn?.addEventListener('click', close);
-  lb?.addEventListener('click', (e)=>{ if(e.target===lb) close(); });
+  closeBtn?.addEventListener('click', window.closeLightbox);
+  lb?.addEventListener('click', (e)=>{ if(e.target===lb) window.closeLightbox(); });
   prevBtn?.addEventListener('click', prev);
   nextBtn?.addEventListener('click', next);
   document.addEventListener('keydown', (e)=>{
     if(!lb.classList.contains('open')) return;
-    if(e.key==='Escape') close();
+    if(e.key==='Escape') window.closeLightbox();
     if(e.key==='ArrowLeft') prev();
     if(e.key==='ArrowRight') next();
   });
