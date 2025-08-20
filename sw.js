@@ -1,4 +1,4 @@
-const CACHE_NAME = 'corte-san-girolamo-v4';
+const CACHE_NAME = 'corte-san-girolamo-v8';
 const ASSETS = [
   './',
   './index.html',

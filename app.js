@@ -465,9 +465,7 @@ function telHref(num){ return 'tel:' + (num||'').replace(/\s+/g,''); }
     host.appendChild(box);
   }
 
-  async function openEatList(){
-    const overlay = document.getElementById('eatOverlay');
-    const closeBtn = document.getElementById('eatClose');
+  async function openEatList(){ const overlay = document.getElementById('eatOverlay'); const closeBtn = document.getElementById('eatClose');
     const listHost = document.getElementById('eatList');
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
     listHost.innerHTML = '<div class="muted">Caricamento…</div>';
@@ -562,8 +560,7 @@ function mapUrlDo(address, label){ const q = encodeURIComponent(address || label
     });
     box.appendChild(ul); host.appendChild(box);
   }
-  async function openDoList(){
-    const overlay = document.getElementById('doOverlay'); const closeBtn = document.getElementById('doClose');
+  async function openDoList(){ const overlay = document.getElementById('doOverlay'); const closeBtn = document.getElementById('doClose');
     const host = document.getElementById('doList');
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
     host.innerHTML = '<div class="muted">Caricamento…</div>';
@@ -989,4 +986,231 @@ function injectWhatsAppButton(){
       close('bookingFormOverlay');
     });
   }
+})();
+
+
+
+/* discover navigation and tabs */
+(function(){
+  function selectTab(which){
+    const eat = document.getElementById('eatList');
+    const dol = document.getElementById('doList');
+    const tabs = document.querySelectorAll('#discoverOverlay .tab');
+    tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===which));
+    if(eat&&dol){ eat.hidden = which!=='eat'; dol.hidden = which!=='do'; }
+  }
+  function ensureOpen(){
+    const ov = document.getElementById('discoverOverlay'); const c = document.getElementById('discoverClose');
+    if(!ov||!c) return;
+    ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+    c.onclick = ()=>{ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); document.body.style.overflow=''; };
+    ov.addEventListener('click',(e)=>{ if(e.target===ov) c.click(); });
+  }
+  const nav = document.getElementById('navDiscover');
+  if(nav){ nav.addEventListener('click', (e)=>{ e.preventDefault(); selectTab('eat'); openEatList(); ensureOpen(); }); }
+  const d1 = document.getElementById('discoverOpen');
+  if(d1){ d1.addEventListener('click', (e)=>{ e.preventDefault(); selectTab('eat'); openEatList(); ensureOpen(); }); }
+  const d2 = document.getElementById('discoverOpenDo');
+  if(d2){ d2.addEventListener('click', (e)=>{ e.preventDefault(); selectTab('do'); openDoList(); ensureOpen(); }); }
+  document.addEventListener('click', (e)=>{
+    const tab = e.target.closest('#discoverOverlay .tab'); if(!tab) return;
+    e.preventDefault(); selectTab(tab.dataset.tab);
+    if(tab.dataset.tab==='eat'){ openEatList(); } else { openDoList(); }
+  });
+})();
+
+
+
+// === Fallback: Scopri Mantova renderers (if native ones fail) ===
+(function(){
+  function isApple(){ return /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && !window.MSStream; }
+  function mapUrl(address){
+    const q = encodeURIComponent(address||'');
+    return isApple() ? `https://maps.apple.com/?q=${q}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
+  }
+  function telHref(num){ return 'tel:' + String(num||'').replace(/\s+/g,''); }
+
+  async function fetchJSON(path){
+    const res = await fetch(path, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+
+  function renderCategories(host, data, type){
+    host.innerHTML='';
+    const wrap = document.createElement('div');
+    wrap.style.display='grid';
+    wrap.style.gridTemplateColumns='repeat(auto-fit, minmax(220px,1fr))';
+    wrap.style.gap='12px';
+    (data.categories||[]).forEach(cat=>{
+      const card=document.createElement('div'); card.className='card';
+      const h=document.createElement('h3'); h.textContent=cat.name||''; h.style.margin='8px 0';
+      const p=document.createElement('p'); p.className='muted'; p.textContent= type==='eat' ? 'Seleziona per vedere i ristoranti' : 'Seleziona per vedere le attività';
+      const a=document.createElement('a'); a.href='#'; a.className='btn'; a.textContent='Apri categoria';
+      a.addEventListener('click', (e)=>{ e.preventDefault(); renderCategory(host, data, cat, type);});
+      card.appendChild(h); card.appendChild(p); card.appendChild(a);
+      wrap.appendChild(card);
+    });
+    host.appendChild(wrap);
+  }
+
+  function renderToolbar(host, title, onBack){
+    const bar=document.createElement('div');
+    bar.style.display='flex'; bar.style.alignItems='center'; bar.style.justifyContent='space-between';
+    const h=document.createElement('h3'); h.textContent=title;
+    const back=document.createElement('button'); back.className='btn btn-outline'; back.textContent='Indietro'; back.addEventListener('click', onBack);
+    bar.appendChild(h); bar.appendChild(back);
+    host.appendChild(bar);
+  }
+
+  function renderCategory(host, data, cat, type){
+    host.innerHTML='';
+    renderToolbar(host, cat.name||'', ()=>renderCategories(host, data, type));
+    const ul=document.createElement('ul'); ul.style.listStyle='none'; ul.style.padding='0'; ul.style.margin='10px 0';
+    (cat.items||[]).forEach(item=>{
+      const li=document.createElement('li'); li.style.padding='10px 8px'; li.style.borderBottom='1px solid #eee';
+      const name=document.createElement('div'); name.style.fontWeight='600'; name.textContent=item.name||'';
+      const row=document.createElement('div'); row.style.display='flex'; row.style.flexWrap='wrap'; row.style.gap='10px'; row.style.marginTop='6px';
+      if(item.address){
+        const aMap=document.createElement('a'); aMap.href=mapUrl(item.address, item.name); aMap.target='_blank'; aMap.rel='noopener'; aMap.className='btn btn-outline'; aMap.textContent='Apri mappa';
+        row.appendChild(aMap);
+      }
+      if(item.phone){
+        const aTel=document.createElement('a'); aTel.href=telHref(item.phone); aTel.className='btn btn-outline'; aTel.textContent='Chiama';
+        row.appendChild(aTel);
+      }
+      if(item.website){
+        const aWeb=document.createElement('a'); aWeb.href=item.website; aWeb.target='_blank'; aWeb.rel='noopener'; aWeb.className='btn btn-outline'; aWeb.textContent='Sito';
+        row.appendChild(aWeb);
+      }
+      li.appendChild(name); li.appendChild(row); ul.appendChild(li);
+    });
+    host.appendChild(ul);
+  }
+
+  async function openEatListFallback(){
+    const overlay = document.getElementById('eatOverlay');
+    const closeBtn = document.getElementById('eatClose');
+    const listHost = document.getElementById('eatList');
+    if(!overlay || !closeBtn || !listHost) return;
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    listHost.innerHTML = '<div class="muted">Caricamento…</div>';
+    try{
+      const data = await fetchJSON('assets/eat.json');
+      renderCategories(listHost, data, 'eat');
+    }catch(e){
+      listHost.innerHTML = '<div class="error">Impossibile caricare la lista.</div>';
+    }
+    closeBtn.onclick = ()=>{ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; };
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeBtn.click(); });
+  }
+
+  async function openDoListFallback(){
+    const overlay = document.getElementById('doOverlay');
+    const closeBtn = document.getElementById('doClose');
+    const host = document.getElementById('doList');
+    if(!overlay || !closeBtn || !host) return;
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    host.innerHTML = '<div class="muted">Caricamento…</div>';
+    try{
+      const data = await fetchJSON('assets/do.json');
+      renderCategories(host, data, 'do');
+    }catch(e){
+      host.innerHTML = '<div class="error">Impossibile caricare.</div>';
+    }
+    closeBtn.onclick = ()=>{ overlay.classList.remove('open'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; };
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeBtn.click(); });
+  }
+
+  // Bind/override: if native openers exist, keep them; also bind fallbacks to ensure population
+  try{
+    const eatBtn = document.getElementById('eatOpen');
+    if(eatBtn){ eatBtn.addEventListener('click', (e)=>{ setTimeout(()=>{ const h=document.getElementById('eatList'); if(h && !h.children.length){ openEatListFallback(); } }, 0); }); }
+    const doBtn = document.getElementById('doOpen');
+    if(doBtn){ doBtn.addEventListener('click', (e)=>{ setTimeout(()=>{ const h=document.getElementById('doList'); if(h && !h.children.length){ openDoListFallback(); } }, 0); }); }
+    const navEat = document.getElementById('navEat');
+    if(navEat){ navEat.addEventListener('click', (e)=>{ setTimeout(()=>{ const h=document.getElementById('eatList'); if(h && !h.children.length){ openEatListFallback(); } }, 0); }); }
+    const navDo = document.getElementById('navDo');
+    if(navDo){ navDo.addEventListener('click', (e)=>{ setTimeout(()=>{ const h=document.getElementById('doList'); if(h && !h.children.length){ openDoListFallback(); } }, 0); }); }
+  }catch(_){}
+})();
+
+/* gallery toggle */
+(function(){
+  const wrap = document.querySelector('.gallery-collapsible');
+  const btn = document.getElementById('galleryToggle');
+  if(!wrap || !btn) return;
+  function refreshLabel(){
+    const expanded = wrap.getAttribute('data-expanded') === 'true';
+    btn.textContent = expanded ? 'Mostra meno' : 'Vedi tutte le foto';
+  }
+  btn.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const expanded = wrap.getAttribute('data-expanded') === 'true';
+    wrap.setAttribute('data-expanded', expanded ? 'false' : 'true');
+    refreshLabel();
+  });
+  refreshLabel();
+})();
+
+/* gallery carousel ensure nav + controls */
+(function(){
+  const gal = document.querySelector('#galleria .gallery.carousel');
+  if(!gal) return;
+  let vp = gal.closest('.gallery-viewport');
+  if(!vp){
+    vp = document.createElement('div'); vp.className='gallery-viewport';
+    gal.parentNode.insertBefore(vp, gal); vp.appendChild(gal);
+  }
+  let prev = vp.querySelector('#galPrev');
+  let next = vp.querySelector('#galNext');
+  if(!prev){ prev=document.createElement('button'); prev.id='galPrev'; prev.className='gallery-nav prev'; prev.setAttribute('aria-label','Indietro'); prev.textContent='‹'; vp.insertBefore(prev, gal); }
+  if(!next){ next=document.createElement('button'); next.id='galNext'; next.className='gallery-nav next'; next.setAttribute('aria-label','Avanti'); next.textContent='›'; vp.appendChild(next); }
+  function scrollDelta(dx){ gal.scrollBy({left: dx, behavior: 'smooth'}); }
+  function update(){
+    const overflow = gal.scrollWidth > gal.clientWidth + 2;
+    prev.style.display = next.style.display = overflow ? '' : 'none';
+    prev.disabled = gal.scrollLeft <= 0;
+    next.disabled = gal.scrollLeft >= gal.scrollWidth - gal.clientWidth - 2;
+  }
+  prev.addEventListener('click', ()=> scrollDelta(-(gal.clientWidth*0.9)));
+  next.addEventListener('click', ()=> scrollDelta( gal.clientWidth*0.9 ));
+  gal.setAttribute('tabindex','0');
+  gal.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowLeft'){ e.preventDefault(); scrollDelta(-(gal.clientWidth*0.9)); }
+    if(e.key==='ArrowRight'){ e.preventDefault(); scrollDelta( gal.clientWidth*0.9 ); }
+  });
+  gal.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update, {passive:true});
+  setTimeout(update, 0);
+})();
+
+/* gallery carousel ensure nav + controls (final) */
+(function(){
+  const vp = document.querySelector('#galleria .gallery-viewport');
+  const gal = vp && vp.querySelector('.gallery.carousel');
+  if(!vp || !gal) return;
+  let prev = vp.querySelector('#galPrev');
+  let next = vp.querySelector('#galNext');
+  function scrollDelta(dx){ gal.scrollBy({left: dx, behavior: 'smooth'}); }
+  function update(){
+    const overflow = gal.scrollWidth > gal.clientWidth + 2;
+    if(prev && next){
+      prev.style.display = next.style.display = overflow ? '' : 'none';
+      prev.disabled = gal.scrollLeft <= 0;
+      next.disabled = gal.scrollLeft >= gal.scrollWidth - gal.clientWidth - 2;
+    }
+  }
+  if(prev){ prev.addEventListener('click', ()=> scrollDelta(-(gal.clientWidth*0.9))); }
+  if(next){ next.addEventListener('click', ()=> scrollDelta( gal.clientWidth*0.9 )); }
+  gal.setAttribute('tabindex','0');
+  gal.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowLeft'){ e.preventDefault(); scrollDelta(-(gal.clientWidth*0.9)); }
+    if(e.key==='ArrowRight'){ e.preventDefault(); scrollDelta( gal.clientWidth*0.9 ); }
+  });
+  gal.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update, {passive:true});
+  setTimeout(update, 0);
 })();
