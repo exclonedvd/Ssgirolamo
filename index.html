@@ -59,15 +59,15 @@
 <aside aria-hidden="true" class="drawer" id="drawer">
 <header>Agriturismo Corte San Girolamo</header>
 <nav>
-<a data-emoji="rooms" data-i18n="nav_camere" href="#camere">Camere</a>
-<a data-emoji="breakfast" data-i18n="nav_colazioni" href="#colazioni">Colazioni / Ristoro</a>
-<a data-emoji="experiences" data-i18n="nav_esperienze" href="#esperienze">Esperienze</a>
-<a data-emoji="gallery" data-i18n="nav_galleria" href="#galleria">Galleria</a>
-<a data-emoji="map" data-i18n="nav_mappa" href="#mappa">Mappa</a>
-<a href="#" id="navDiscover">Scopri Mantova</a><a data-emoji="planner" href="#planner">🧭 <span>Itinerario su misura</span></a>
-<a data-emoji="whatsapp" data-i18n="nav_whatsapp" href="#" id="navWhatsApp">WhatsApp</a>
-<a data-emoji="contact" data-i18n="nav_contatti" href="#contatti">Contatti</a>
-<a data-emoji="request" data-i18n="nav_prenotazioni" href="#booking">Richiesta disponibilità</a>
+<a data-emoji="rooms" data-i18n="nav_camere" href="#camere"><span aria-hidden="true" class="nav-emoji">🛏️</span> Camere</a>
+<a data-emoji="breakfast" data-i18n="nav_colazioni" href="#colazioni"><span aria-hidden="true" class="nav-emoji">🥐</span> Colazioni / Ristoro</a>
+<a data-emoji="experiences" data-i18n="nav_esperienze" href="#esperienze"><span aria-hidden="true" class="nav-emoji">🎒</span> Esperienze</a>
+<a data-emoji="gallery" data-i18n="nav_galleria" href="#galleria"><span aria-hidden="true" class="nav-emoji">📸</span> Galleria</a>
+<a data-emoji="map" data-i18n="nav_mappa" href="#mappa"><span aria-hidden="true" class="nav-emoji">📌</span> Mappa</a>
+<a href="#mappa" id="navDiscover"><span aria-hidden="true" class="nav-emoji">📍</span> Scopri Mantova</a><a data-emoji="planner" href="#planner"><span aria-hidden="true" class="nav-emoji">🧭</span> <span>Itinerario su misura</span></a>
+<a data-emoji="whatsapp" data-i18n="nav_whatsapp" href="#" id="navWhatsApp"><span aria-hidden="true" class="nav-emoji">💬</span> WhatsApp</a>
+<a data-emoji="contact" data-i18n="nav_contatti" href="#contatti"><span aria-hidden="true" class="nav-emoji">✉️</span> Contatti</a>
+<a data-emoji="request" data-i18n="nav_prenotazioni" href="#booking"><span aria-hidden="true" class="nav-emoji">📝</span> Richiesta disponibilità</a>
 </nav>
 <div class="social">
 <a aria-label="Instagram" href="https://www.instagram.com/cortesangirolamo/?igsh=MTByZDhoNjFrcnp6OA==" rel="noopener noreferrer" target="_blank"><svg height="22" viewbox="0 0 24 24" width="22"><path d="M7 2h10a5 5 0 015 5v10a5 5 0 01-5 5H7a5 5 0 01-5-5V7a5 5 0 015-5zm10 2H7a3 3 0 00-3 3v10a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3zm-5 3.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm5.8-.9a1.1 1.1 0 110 2.2 1.1 1.1 0 010-2.2z" fill="currentColor"></path></svg></a>
@@ -205,12 +205,36 @@
   border: 2px solid var(--brand-2, #2b5a44);
   box-shadow: 0 0 0 3px rgba(43,90,68,.10);
 }
+
+
+/* === Planner merged header + compact mobile === */
+#planner .planner-form.card{ padding:14px; }
+#planner .planner-header h3{ margin:0 0 4px 0; font-size:1.15rem; }
+#planner .planner-header .muted{ margin:0 0 8px 0; }
+
+/* Fieldset legends inline with options for tighter layout */
+#planner fieldset{ border:0; margin:0; padding:0; }
+#planner fieldset legend{ font-weight:600; margin:0 8px 6px 0; display:inline-block; }
+
+#planner fieldset .options{ display:flex; flex-wrap:wrap; gap:10px; }
+
+/* Mobile: horizontal scroll for chips to cut vertical space */
+@media (max-width:640px){
+  #planner .planner-form.card{ padding:12px; border-radius:16px; }
+  #planner .form-grid{ gap:10px; margin-bottom:6px; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+  #planner fieldset legend{ margin:0 8px 4px 0; font-size:.95rem; }
+  #planner fieldset .options{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; gap:8px; padding-bottom:4px; }
+  #planner .chip span{ padding:8px 10px; }
+  #planner .actions{ margin-top:8px; }
+}
+
+/* Extra small devices */
+@media (max-width:380px){
+  #planner .form-grid{ grid-template-columns:1fr; }
+  #planner .chip span{ padding:7px 9px; font-size:.95rem; }
+}
 </style>
-<header class="planner-hero card">
-<h2 data-i18n="planner_title">Itinerario su misura</h2>
-<p class="muted">Itinerario su misura (meteo, interessi, ristoranti).</p>
-</header>
-<form class="planner-form card" id="plannerForm" novalidate="">
+<form class="planner-form card" id="plannerForm" novalidate=""><div class="planner-header"><h3>Itinerario su misura</h3><p class="muted">Itinerario su misura (meteo, interessi, ristoranti).</p></div>
 <div class="form-grid">
 <label class="field">
 <span class="label" data-i18n="planner_name">Nome</span>
@@ -231,18 +255,10 @@
 <div class="fieldset-row">
 <fieldset class="segmented">
 <legend data-i18n="planner_type">Tipo di viaggiatore</legend>
-<label class="chip"><input name="type" type="radio" value="famiglia"/><span>👨‍👩‍👧 Famiglia</span></label>
-<label class="chip"><input checked="" name="type" type="radio" value="coppia"/><span>💑 Coppia</span></label>
-<label class="chip"><input name="type" type="radio" value="solo"/><span>🧍 Solo</span></label>
-<label class="chip"><input name="type" type="radio" value="avventura"/><span>🧗 Avventura</span></label>
-</fieldset>
+<div class="options"><label class="chip"><input name="type" type="radio" value="famiglia"/><span>👨‍👩‍👧 Famiglia</span></label><label class="chip"><input checked="" name="type" type="radio" value="coppia"/><span>💑 Coppia</span></label><label class="chip"><input name="type" type="radio" value="solo"/><span>🧍 Solo</span></label><label class="chip"><input name="type" type="radio" value="avventura"/><span>🧗 Avventura</span></label></div></fieldset>
 <fieldset class="chips">
 <legend data-i18n="planner_interests">Interessi</legend>
-<label class="chip"><input checked="" name="interests" type="checkbox" value="arte"/><span>🖼️ Arte</span></label>
-<label class="chip"><input checked="" name="interests" type="checkbox" value="natura"/><span>🌿 Natura</span></label>
-<label class="chip"><input checked="" name="interests" type="checkbox" value="enogastronomia"/><span>🍷 Enogastronomia</span></label>
-<label class="chip"><input name="interests" type="checkbox" value="relax"/><span>🧘 Relax</span></label>
-</fieldset>
+<div class="options"><label class="chip"><input checked="" name="interests" type="checkbox" value="arte"/><span>🖼️ Arte</span></label><label class="chip"><input checked="" name="interests" type="checkbox" value="natura"/><span>🌿 Natura</span></label><label class="chip"><input checked="" name="interests" type="checkbox" value="enogastronomia"/><span>🍷 Enogastronomia</span></label><label class="chip"><input name="interests" type="checkbox" value="relax"/><span>🧘 Relax</span></label></div></fieldset>
 </div>
 <div class="actions">
 <button class="btn" data-i18n="planner_generate" id="plannerGenerate" type="button">Genera itinerario</button>
