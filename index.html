@@ -25,8 +25,8 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <link href="assets/icons/icon-192.png" rel="apple-touch-icon"/>
 <link href="assets/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
-<link href="assets/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png">
-<link as="style" href="styles.css" rel="preload"/>
+<link href="assets/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link as="style" href="styles.css" rel="preload">
 <link href="styles.css" rel="stylesheet"/>
 <script>(function(){try{var c=document.getElementById("canonical"); if(c){c.href=location.origin+location.pathname;}}catch(e){}})();</script>
 <style>
@@ -34,7 +34,7 @@
 .skip-link:focus{left:16px;top:16px;width:auto;height:auto;padding:8px 12px;border-radius:8px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.15);z-index:10000}
 </style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BedAndBreakfast", "name": "Agriturismo Corte San Girolamo", "address": {"@type": "PostalAddress", "streetAddress": "Str. S. Girolamo, 1", "addressLocality": "Mantova", "postalCode": "46100", "addressCountry": "IT"}, "telephone": "+39 347 800 8505", "email": "info@cortesangirolamo.it", "url": "", "image": "assets/Home.jpg", "geo": {"@type": "GeoCoordinates", "latitude": 45.149, "longitude": 10.808}, "sameAs": ["https://www.instagram.com/cortesangirolamo/", "https://www.facebook.com/"]}</script>
-<meta content="https://www.cortesangirolamo.it/" property="og:url"/><meta content="https://www.cortesangirolamo.it/assets/Home.jpg" name="twitter:image"/></link>  <link rel="stylesheet" href="assets/meteo_widget.css?v=20250817">
+<meta content="https://www.cortesangirolamo.it/" property="og:url"/><meta content="https://www.cortesangirolamo.it/assets/Home.jpg" name="twitter:image"/></link> <link href="assets/meteo_widget.css?v=20250817" rel="stylesheet"/>
 </head>
 <body>
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -81,7 +81,7 @@
 </header>
 <main id="main">
 <section class="container" id="camere">
-<div class="title-row"><h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2><button id="openBooking" class="btn btn-solid" aria-haspopup="dialog" aria-controls="bookingOverlay" aria-label="Apri prenotazione">
+<div class="title-row"><h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2><button aria-controls="bookingOverlay" aria-haspopup="dialog" aria-label="Apri prenotazione" class="btn btn-solid" id="openBooking">
   Prenota
 </button></div>
 <div class="card">
@@ -127,7 +127,7 @@
 <div class="gallery" id="gallery"></div>
 </section>
 <section class="container" id="mappa">
-<div class="section-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2 class="section-title" data-emoji="map"><span data-i18n="mappa_title">Mappa</span></h2><button id="meteoOpen" class="btn btn-small" style="display:inline-flex;align-items:center;gap:6px">🌤️ Meteo</button></div>
+<div class="section-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2 class="section-title" data-emoji="map"><span data-i18n="mappa_title">Mappa</span></h2><button class="btn btn-small" id="meteoOpen" style="display:inline-flex;align-items:center;gap:6px">🌤️ Meteo</button></div>
 <div class="card">
 <p><svg height="20" viewbox="0 0 24 24" width="20"><path d="M9.5 3l5 2 5-2v18l-5 2-5-2-5 2V5l5-2zM9 5.3L6 6.5v12.2l3-1.2V5.3zm2 0v12.2l3 1.2V6.5l-3-1.2zm8 12.2V5.3l-3 1.2v12.2l3-1.2z" fill="currentColor"></path></svg> Str. S. Girolamo, 1, 46100 Mantova MN</p>
 <div style="aspect-ratio:16/9;">
@@ -141,7 +141,6 @@
 <button class="btn" id="eatOpen"><span data-i18n="eat_open_btn">Apri lista ristoranti</span></button>
 </div>
 </div>
-
 <div class="container" style="margin-top:16px">
 <div class="card">
 <h3 style="margin-top:0"><span data-i18n="do_title">Cosa fare a Mantova 🎒</span></h3>
@@ -305,42 +304,7 @@
 </div>
 </div>
 </div>
-</section><section class="container" id="booking">
-<h2 class="section-title" data-emoji="request" data-i18n="booking_title">Richiesta disponibilità</h2>
-<div class="card">
-<form data-netlify="true" method="POST" name="booking" netlify-honeypot="bot-field">
-<input name="form-name" type="hidden" value="booking"/>
-<p style="display:none">
-<label>Don’t fill this out: <input name="bot-field"/></label>
-</p>
-<div class="inline">
-<div class="input"><label>Nome e cognome<input autocomplete="name" name="name" placeholder="Mario Rossi" required=""/></label></div>
-<div class="input"><label>Email<input autocomplete="email" name="email" placeholder="nome@email.com" required="" type="email"/></label></div>
-</div>
-<div class="inline">
-<div class="input"><label data-i18n="checkin_label">Check‑in</label><input name="checkin" required="" type="date"/></div>
-<div class="input"><label data-i18n="checkout_label">Check‑out</label><input name="checkout" required="" type="date"/></div>
-</div>
-<div class="inline">
-<div class="input"><label data-i18n="adults_label">Adulti</label><input min="1" name="adults" required="" type="number" value="2"/></div>
-<div class="input"><label data-i18n="children_label">Bambini</label><input min="0" name="children" type="number" value="0"/></div>
-</div>
-<div class="inline">
-<div class="input"><label data-i18n="rooms_label">Camere</label><input min="1" name="rooms" required="" type="number" value="1"/></div>
-<div class="input"><label>Telefono<input autocomplete="tel" name="phone" type="tel"/></label></div>
-</div>
-<div class="input"><label data-i18n="message_label">Messaggio</label><textarea name="message" placeholder="Esigenze particolari, orari, ecc."></textarea></div>
-<label class="input checkbox"><input name="consent" required="" type="checkbox"/> <span data-i18n="gdpr_consent">Acconsento al trattamento dei dati ai sensi del GDPR</span></label>
-<div class="success" data-i18n="form_thanks" id="bookingSuccess">Grazie! La tua richiesta è stata inviata.</div>
-<div class="error" data-i18n="form_error" id="bookingError">Ops, qualcosa non ha funzionato. Riprova più tardi.</div>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit"><span data-i18n="send_button">Invia richiesta</span></button></div>
-<small class="hint">Netlify Forms pronto. Per EmailJS, vedi README e configura le chiavi.</small>
-</form>
-</div>
 </section>
-
-
-
 </main>
 <footer>
 <div class="container">
@@ -435,15 +399,14 @@
   })();
 </script>
 <div aria-hidden="true" aria-modal="true" class="lightbox" id="meteoOverlay" role="dialog">
-  <button aria-label="Chiudi" class="controls close" id="meteoClose">✕</button>
-  <div class="card" style="width:min(1024px,96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-      <strong style="font-size:18px">Meteo Mantova</strong>
-    </div>
-    <div id="meteoOverlayBody"></div>
-  </div>
+<button aria-label="Chiudi" class="controls close" id="meteoClose">✕</button>
+<div class="card" style="width:min(1024px,96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
+<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+<strong style="font-size:18px">Meteo Mantova</strong>
 </div>
-
+<div id="meteoOverlayBody"></div>
+</div>
+</div>
 <script>
 (function(){
   function ensureMeteo(){
@@ -477,62 +440,60 @@
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', bind); } else { bind(); }
 })();
 </script>
-
 <!-- Booking Overlay -->
-<div id="bookingOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="overlay-backdrop" data-close="bookingOverlay"></div>
-  <div class="overlay-panel" role="document">
-    <button class="overlay-close" data-close="bookingOverlay" aria-label="Chiudi">×</button>
-    <h3 class="overlay-title">Richiesta disponibilità</h3>
-    <p class="overlay-subtitle">Scegli il canale che preferisci. Rispondiamo di solito entro poche ore.</p>
-    <p class="overlay-hours">Lunedì–Venerdì: 09:00–20:00<br/>Sabato–Domenica: 09:00–19:00</p>
-    <div class="booking-actions">
-      <a id="bookingWhatsapp" class="cta" href="#" target="_blank" rel="noopener">
-        <span class="cta-emoji">💬</span> WhatsApp
+<div aria-hidden="true" aria-modal="true" class="overlay" id="bookingOverlay" role="dialog">
+<div class="overlay-backdrop" data-close="bookingOverlay"></div>
+<div class="overlay-panel" role="document">
+<button aria-label="Chiudi" class="overlay-close" data-close="bookingOverlay">×</button>
+<h3 class="overlay-title">Richiesta disponibilità</h3>
+<p class="overlay-subtitle">Scegli il canale che preferisci. Rispondiamo di solito entro poche ore.</p>
+<p class="overlay-hours">Lunedì–Venerdì: 09:00–20:00<br/>Sabato–Domenica: 09:00–19:00</p>
+<div class="booking-actions">
+<a class="cta" href="#" id="bookingWhatsapp" rel="noopener" target="_blank">
+<span class="cta-emoji">💬</span> WhatsApp
       </a>
-      <button id="openBookingForm" class="cta">
-        <span class="cta-emoji">📝</span> Compila modulo
+<button class="cta" id="openBookingForm">
+<span class="cta-emoji">📝</span> Compila modulo
       </button>
-      <a id="bookingCall" class="cta" href="tel:+390000000000">
-        <span class="cta-emoji">📞</span> Chiamaci
+<a class="cta" href="tel:+390000000000" id="bookingCall">
+<span class="cta-emoji">📞</span> Chiamaci
       </a>
-    </div>
-  </div>
 </div>
-
+</div>
+</div>
 <!-- Booking Form Overlay -->
-<div id="bookingFormOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="overlay-backdrop" data-close="bookingFormOverlay"></div>
-  <div class="overlay-panel" role="document">
-    <button class="overlay-close" data-close="bookingFormOverlay" aria-label="Chiudi">×</button>
-    <h3 class="overlay-title">Richiesta informazioni / prenotazione</h3>
-    <form id="bookingForm" class="form">
-      <div class="grid">
-        <label>Nome e Cognome
-          <input type="text" name="name" required placeholder="Mario Rossi"/>
-        </label>
-        <label>Email
-          <input type="email" name="email" required placeholder="mario@example.com"/>
-        </label>
-        <label>Telefono
-          <input type="tel" name="phone" placeholder="+39 ..."/>
-        </label>
-        <label>Arrivo
-          <input type="date" name="checkin" required/>
-        </label>
-        <label>Partenza
-          <input type="date" name="checkout" required/>
-        </label>
-        <label>Ospiti
-          <input type="number" name="guests" min="1" value="2" required/>
-        </label>
-      </div>
-      <label>Messaggio
-        <textarea name="message" rows="4" placeholder="Es. Richiesta disponibilità per camera doppia..."></textarea>
-      </label>
-      <button type="submit" class="btn btn-solid">Invia Modulo</button>
-    </form>
-  </div>
+<div aria-hidden="true" aria-modal="true" class="overlay" id="bookingFormOverlay" role="dialog">
+<div class="overlay-backdrop" data-close="bookingFormOverlay"></div>
+<div class="overlay-panel" role="document">
+<button aria-label="Chiudi" class="overlay-close" data-close="bookingFormOverlay">×</button>
+<h3 class="overlay-title">Richiesta informazioni / prenotazione</h3>
+<form class="form" id="bookingForm">
+<div class="grid">
+<label>Nome e Cognome
+          <input name="name" placeholder="Mario Rossi" required="" type="text"/>
+</label>
+<label>Email
+          <input name="email" placeholder="mario@example.com" required="" type="email"/>
+</label>
+<label>Telefono
+          <input name="phone" placeholder="+39 ..." type="tel"/>
+</label>
+<label>Arrivo
+          <input name="checkin" required="" type="date"/>
+</label>
+<label>Partenza
+          <input name="checkout" required="" type="date"/>
+</label>
+<label>Ospiti
+          <input min="1" name="guests" required="" type="number" value="2"/>
+</label>
+</div>
+<label>Messaggio
+        <textarea name="message" placeholder="Es. Richiesta disponibilità per camera doppia..." rows="4"></textarea>
+</label>
+<button class="btn btn-solid" type="submit">Invia Modulo</button>
+</form>
+</div>
 </div>
 </body>
 </html>
