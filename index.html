@@ -81,7 +81,9 @@
 </header>
 <main id="main">
 <section class="container" id="camere">
-<h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2>
+<div class="title-row"><h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2><button id="openBooking" class="btn btn-solid" aria-haspopup="dialog" aria-controls="bookingOverlay" aria-label="Apri prenotazione">
+  Prenota
+</button></div>
 <div class="card">
 <p data-i18n="camere_text">Camere accoglienti in stile rurale mantovano, ognuna con bagno privato, aria condizionata e Wi‑Fi. Disponibili soluzioni per famiglie e ospiti business.</p>
 <div class="badge" data-i18n="camere_feat_rooms">🛏️ 10 camere</div>
@@ -125,7 +127,7 @@
 <div class="gallery" id="gallery"></div>
 </section>
 <section class="container" id="mappa">
-<h2 class="section-title" data-emoji="map" data-i18n="mappa_title">Mappa</h2>
+<div class="section-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2 class="section-title" data-emoji="map"><span data-i18n="mappa_title">Mappa</span></h2><button id="meteoOpen" class="btn btn-small" style="display:inline-flex;align-items:center;gap:6px">🌤️ Meteo</button></div>
 <div class="card">
 <p><svg height="20" viewbox="0 0 24 24" width="20"><path d="M9.5 3l5 2 5-2v18l-5 2-5-2-5 2V5l5-2zM9 5.3L6 6.5v12.2l3-1.2V5.3zm2 0v12.2l3 1.2V6.5l-3-1.2zm8 12.2V5.3l-3 1.2v12.2l3-1.2z" fill="currentColor"></path></svg> Str. S. Girolamo, 1, 46100 Mantova MN</p>
 <div style="aspect-ratio:16/9;">
@@ -139,7 +141,6 @@
 <button class="btn" id="eatOpen"><span data-i18n="eat_open_btn">Apri lista ristoranti</span></button>
 </div>
 </div>
-<section id="meteo"></section>
 
 <div class="container" style="margin-top:16px">
 <div class="card">
@@ -148,8 +149,6 @@
 <a class="btn" id="doOpen"><span data-i18n="do_open_btn">Apri lista attività</span></a>
 </div>
 </div>
-<section id="bacheca"></section>
-
 </section>
 <!-- SEZIONE PLANNER (sotto "Cosa fare a Mantova 🎒") -->
 <!-- SEZIONE PLANNER (COMPATTA, sotto "Cosa fare a Mantova 🎒") -->
@@ -435,7 +434,105 @@
     }
   })();
 </script>
-<script src="assets/bacheca_widget.js?v=20250817" data-target="#bacheca" data-title=""></script>
-<script src="assets/meteo_widget.js?v=20250817" data-target="#meteo" data-city="Mantova" data-lat="45.156" data-lon="10.791"></script>
+<div aria-hidden="true" aria-modal="true" class="lightbox" id="meteoOverlay" role="dialog">
+  <button aria-label="Chiudi" class="controls close" id="meteoClose">✕</button>
+  <div class="card" style="width:min(1024px,96vw);max-height:84vh;overflow:auto;border-radius:14px;margin:auto;background:#fff;padding:12px">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <strong style="font-size:18px">Meteo Mantova</strong>
+    </div>
+    <div id="meteoOverlayBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function ensureMeteo(){
+    var host = document.getElementById('meteoOverlayBody');
+    if(!host) return;
+    if(host.dataset.loaded === '1') return;
+    host.innerHTML = ''; // clean
+    var s = document.createElement('script');
+    s.src = 'assets/meteo_widget.js?v=20250817';
+    s.setAttribute('data-target', '#meteoOverlayBody');
+    s.setAttribute('data-city', 'Mantova');
+    s.setAttribute('data-lat', '45.156');
+    s.setAttribute('data-lon', '10.791');
+    s.setAttribute('data-days', '7');
+    s.onload = function(){ host.dataset.loaded = '1'; };
+    document.body.appendChild(s);
+  }
+  function bind(){
+    var b=document.getElementById('meteoOpen');
+    var o=document.getElementById('meteoOverlay');
+    var c=document.getElementById('meteoClose');
+    if(!b||!o||!c) return;
+    if(b._wxBound) return; b._wxBound=true;
+    function open(){ ensureMeteo(); o.classList.add('open'); o.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+    function close(){ o.classList.remove('open'); o.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+    b.addEventListener('click', open);
+    c.addEventListener('click', close);
+    o.addEventListener('click', function(e){ if(e.target===o) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && o.classList.contains('open')) close(); });
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', bind); } else { bind(); }
+})();
+</script>
+
+<!-- Booking Overlay -->
+<div id="bookingOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="overlay-backdrop" data-close="bookingOverlay"></div>
+  <div class="overlay-panel" role="document">
+    <button class="overlay-close" data-close="bookingOverlay" aria-label="Chiudi">×</button>
+    <h3 class="overlay-title">Richiesta disponibilità</h3>
+    <p class="overlay-subtitle">Scegli il canale che preferisci. Rispondiamo di solito entro poche ore.</p>
+    <p class="overlay-hours">Lunedì–Venerdì: 09:00–20:00<br/>Sabato–Domenica: 09:00–19:00</p>
+    <div class="booking-actions">
+      <a id="bookingWhatsapp" class="cta" href="#" target="_blank" rel="noopener">
+        <span class="cta-emoji">💬</span> WhatsApp
+      </a>
+      <button id="openBookingForm" class="cta">
+        <span class="cta-emoji">📝</span> Compila modulo
+      </button>
+      <a id="bookingCall" class="cta" href="tel:+390000000000">
+        <span class="cta-emoji">📞</span> Chiamaci
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Form Overlay -->
+<div id="bookingFormOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="overlay-backdrop" data-close="bookingFormOverlay"></div>
+  <div class="overlay-panel" role="document">
+    <button class="overlay-close" data-close="bookingFormOverlay" aria-label="Chiudi">×</button>
+    <h3 class="overlay-title">Richiesta informazioni / prenotazione</h3>
+    <form id="bookingForm" class="form">
+      <div class="grid">
+        <label>Nome e Cognome
+          <input type="text" name="name" required placeholder="Mario Rossi"/>
+        </label>
+        <label>Email
+          <input type="email" name="email" required placeholder="mario@example.com"/>
+        </label>
+        <label>Telefono
+          <input type="tel" name="phone" placeholder="+39 ..."/>
+        </label>
+        <label>Arrivo
+          <input type="date" name="checkin" required/>
+        </label>
+        <label>Partenza
+          <input type="date" name="checkout" required/>
+        </label>
+        <label>Ospiti
+          <input type="number" name="guests" min="1" value="2" required/>
+        </label>
+      </div>
+      <label>Messaggio
+        <textarea name="message" rows="4" placeholder="Es. Richiesta disponibilità per camera doppia..."></textarea>
+      </label>
+      <button type="submit" class="btn btn-solid">Invia Modulo</button>
+    </form>
+  </div>
+</div>
 </body>
 </html>

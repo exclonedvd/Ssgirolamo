@@ -939,3 +939,54 @@ function injectWhatsAppButton(){
 
 
 
+
+
+// --- Booking overlay logic ---
+(function(){
+  const body = document.body;
+  function open(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.setAttribute('aria-hidden','false');
+    body.dataset.lockScroll = '1';
+    body.style.overflow='hidden';
+    const closeBtn = el.querySelector('.overlay-close');
+    if(closeBtn) closeBtn.focus({preventScroll:true});
+  }
+  function close(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.setAttribute('aria-hidden','true');
+    body.style.overflow='';
+    delete body.dataset.lockScroll;
+  }
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if(t.closest('#openBooking')){ open('bookingOverlay'); }
+    if(t.hasAttribute('data-close')){ close(t.getAttribute('data-close')); }
+    if(t.closest('#openBookingForm')){ e.preventDefault(); close('bookingOverlay'); open('bookingFormOverlay'); }
+  }, false);
+
+  // WhatsApp link & phone number: customize here
+  const phoneE164 = '+393478008505';
+  const localPhone = '3478008505'; // TODO: sostituisci con numero reale
+  const waMsg = encodeURIComponent('Ciao! Vorrei chiedere informazioni/disponibilità.');
+  const wa = document.getElementById('bookingWhatsapp');
+  if(wa){ wa.href = `https://wa.me/${phoneE164.replace('+','')}/?text=${waMsg}`; }
+  const tel = document.getElementById('bookingCall'); if(tel){ tel.href = `tel:${localPhone}`; }
+
+  // Minimal submit handler
+  const form = document.getElementById('bookingForm');
+  if(form){
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // collect data
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      console.log('Richiesta prenotazione', payload);
+      alert('Richiesta inviata! Ti ricontatteremo al più presto.');
+      form.reset();
+      close('bookingFormOverlay');
+    });
+  }
+})();
