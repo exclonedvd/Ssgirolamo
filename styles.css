@@ -261,3 +261,81 @@ header.hero{ will-change: background-position; background-position: center calc(
   55%  { transform: translateY(-1px) scale(1.06) rotate(0deg); opacity:1; }
   100% { transform: translateY(0) scale(1); }
 }
+
+/* === Mobile/PWA fixes === */
+/* Prevent iOS zoom on inputs */
+input, select, textarea { font-size: 16px; }
+
+/* Safe area for PWA standalone */
+.pwa body { padding-bottom: env(safe-area-inset-bottom); }
+.pwa header, .pwa .topbar { padding-top: env(safe-area-inset-top); }
+
+/* Modern viewport units for hero */
+@supports (height: 1svh) {
+  header.hero { min-height: 60svh; }
+}
+
+/* Overscroll/touch behavior for modals/overlays */
+.modal, .overlay, .drawer { overscroll-behavior: contain; }
+.body--overlay-open, .overlay-open body { overflow: hidden; touch-action: none; }
+
+/* === Install App Toast === */
+.install-toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  padding: 14px 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  transform: translateY(16px);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform .25s ease, opacity .25s ease, visibility .25s;
+}
+.install-toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.install-toast .txt {
+  display: grid;
+  gap: 6px;
+}
+.install-toast .title {
+  font-weight: 700;
+}
+.install-toast .desc {
+  font-size: .95rem;
+  color: #444;
+}
+.install-toast .actions {
+  display: flex;
+  gap: 8px;
+}
+.install-toast .btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.install-toast .btn-primary {
+  background: var(--brand, #2f5d3a);
+  color: #fff;
+}
+.install-toast .btn-ghost {
+  background: #f3f5f4;
+  color: #222;
+}
+@media (prefers-reduced-motion: reduce){
+  .install-toast { transition: none; }
+}

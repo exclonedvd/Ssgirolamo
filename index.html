@@ -24,6 +24,8 @@
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <link href="assets/icons/icon-192.png" rel="apple-touch-icon"/>
+
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180.png">
 <link href="assets/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
 <link href="assets/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
 <link as="style" href="styles.css" rel="preload"/>
@@ -333,53 +335,7 @@
 <img alt="" decoding="async" id="lbImg" loading="lazy"/>
 <button aria-label="Successivo" class="next" id="lbNext">›</button>
 </div>
-<button <!--="" <script="" by="" class="controls close" emailjs="" enable="" optional="" sdk:="" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js" uncommenting="">
-  --&gt;
-
-
-<script>
-(function(){
-  // Update <html lang> if your i18n sets window.I18N.lang
-  try{
-    if (window.I18N && I18N.lang) { document.documentElement.setAttribute('lang', I18N.lang); }
-  }catch(e){}
-
-  // Keep aria-expanded in sync for menu button/drawer
-  var btn = document.getElementById('menuBtn');
-  var drawer = document.getElementById('drawer');
-  if(btn && drawer){
-    btn.addEventListener('click', function(){
-      var isHidden = drawer.getAttribute('aria-hidden') === 'true';
-      drawer.setAttribute('aria-hidden', String(!isHidden));
-      btn.setAttribute('aria-expanded', String(isHidden));
-    }, {capture: true});
-  }
-
-  // Lightbox: close on Escape if close() exists
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){
-      var lb = document.getElementById('lightbox');
-      if(lb){
-        lb.setAttribute('aria-hidden','true');
-        if (typeof window.closeLightbox === 'function') { try{ window.closeLightbox(); }catch(_){} }
-      }
-    }
-  });
-
-  // Ensure all images have lazy/async (for images inserted dynamically after DOM ready)
-  function applyImgHints(root){
-    (root || document).querySelectorAll('img').forEach(function(img){
-      if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
-      if(!img.hasAttribute('decoding')) img.setAttribute('decoding','async');
-    });
-  }
-  applyImgHints(document);
-  var mo = new MutationObserver(function(){
-    applyImgHints(document);
-  });
-  mo.observe(document.documentElement, {childList:true, subtree:true});
-})();
-</script>
+<button <!--="" <!-- EmailJS CDN (optional): <script defer src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script> -->
 </button>
 <script defer="" src="planner.js?v=10"></script>
 <script>

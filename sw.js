@@ -61,3 +61,48 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(fetch(e.request).catch(() => new Response('Offline', {status: 503})));
   }
 });
+
+/* === RUNTIME-CACHING === */
+self.addEventListener('fetch', (e)=>{
+  try{
+    const url = new URL(e.request.url);
+    // Only handle GET
+    if(e.request.method !== 'GET') return;
+
+    // Images: cache-first
+    if (e.request.destination === 'image' || /\.(?:png|jpg|jpeg|webp|avif|gif|svg)$/i.test(url.pathname)) {
+      e.respondWith(
+        caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+          return resp;
+        }))
+      );
+      return;
+    }
+
+    // Gallery/JSON: stale-while-revalidate
+    if (url.pathname.endsWith('/assets/gallery.json') || url.pathname.endsWith('/assets/i18n.json')) {
+      e.respondWith(
+        caches.open(CACHE_NAME).then(async cache => {
+          const cached = await cache.match(e.request);
+          const net = fetch(e.request).then(resp => { cache.put(e.request, resp.clone()); return resp; }).catch(()=>null);
+          return cached || net || fetch(e.request);
+        })
+      );
+      return;
+    }
+
+    // jsDelivr CDN: stale-while-revalidate
+    if (/^https?:\/\/cdn\.jsdelivr\.net\//.test(url.href)) {
+      e.respondWith(
+        caches.open(CACHE_NAME).then(async cache => {
+          const cached = await cache.match(e.request);
+          const net = fetch(e.request).then(resp => { cache.put(e.request, resp.clone()); return resp; }).catch(()=>null);
+          return cached || net || fetch(e.request);
+        })
+      );
+      return;
+    }
+  }catch(err){ /* ignore */ }
+});

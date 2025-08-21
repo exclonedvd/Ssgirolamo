@@ -1431,3 +1431,142 @@ function injectWhatsAppButton(){
   window.addEventListener('DOMContentLoaded', prep);
   window.addEventListener('load', prep);
 })();
+
+
+/* === PWA detection === */
+(function(){
+  try{
+    var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+    if(isStandalone){ document.documentElement.classList.add('pwa'); }
+  }catch(e){}
+})();
+
+/* === Install App Toast (Android + iOS) === */
+(function(){
+  var ua = (navigator.userAgent || '').toLowerCase();
+  var isIOS = /iphone|ipad|ipod/.test(ua) && !/crios|fxios|edgios/.test(ua);
+  var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+  var storageKey = 'installToast.dismissed.until';
+  var promptEvent = null;
+  var shown = false;
+
+  // helper: TTL 14 days for "non mostrare più"
+  function shouldShow(){
+    try{
+      var until = localStorage.getItem(storageKey);
+      if(until && Date.now() < Number(until)) return false;
+    }catch(e){}
+    return !isStandalone;
+  }
+  function dontShowFor(days){
+    try{
+      var ms = (days||14)*24*60*60*1000;
+      localStorage.setItem(storageKey, String(Date.now()+ms));
+    }catch(e){}
+  }
+
+  // Build toast lazily
+  function buildToast(){
+    if(document.getElementById('installToast')) return document.getElementById('installToast');
+    var host = document.createElement('div');
+    host.id = 'installToast';
+    host.className = 'install-toast';
+    host.setAttribute('role','dialog');
+    host.setAttribute('aria-live','polite');
+    host.setAttribute('aria-label','Suggerimento installazione app');
+    var title = isIOS ? 'Installa l’app su iPhone' : 'Installa l’app';
+    var desc = isIOS
+      ? 'Apri il menu Condividi (icona ) e scegli “Aggiungi alla schermata Home”.'
+      : 'Aggiungi l’app alla schermata Home per un’esperienza veloce, offline e a tutto schermo.';
+
+    // Simple inline SVG for the iOS share icon (only visual hint)
+    var shareIcon = '<svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 16a1 1 0 0 0 1-1V8.41l1.3 1.3a1 1 0 1 0 1.4-1.42l-3-3a1 1 0 0 0-1.4 0l-3 3A1 1 0 1 0 9.7 9.7L11 8.4V15a1 1 0 0 0 1 1Zm7-1a1 1 0 0 1 2 0v3a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-3a1 1 0 0 1 2 0v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1Z"/></svg>';
+
+    host.innerHTML = ''
+      + '<div class="txt">'
+      +   '<div class="title">'+ title +'</div>'
+      +   '<div class="desc">' + (isIOS ? desc.replace(' (icona )', ' ' + shareIcon) : desc) + '</div>'
+      + '</div>'
+      + '<div class="actions">'
+      +   (isIOS
+           ? '<button class="btn btn-primary" id="toastOk">Ok</button>'
+           : '<button class="btn btn-primary" id="toastInstall">Installa</button>')
+      +   '<button class="btn btn-ghost" id="toastLater">Più tardi</button>'
+      +   '<button class="btn btn-ghost" id="toastHide">Non mostrare</button>'
+      + '</div>';
+
+    document.body.appendChild(host);
+
+    // Bind actions
+    var elInstall = document.getElementById('toastInstall');
+    var elLater = document.getElementById('toastLater');
+    var elHide = document.getElementById('toastHide');
+    var elOk = document.getElementById('toastOk');
+
+    if(elInstall){
+      elInstall.addEventListener('click', function(){
+        if(promptEvent){
+          promptEvent.prompt && promptEvent.prompt();
+          promptEvent.userChoice && promptEvent.userChoice.then(function(res){
+            // Always hide after user interaction; if accepted, do not show again soon
+            hideToast();
+            if(res && res.outcome === 'accepted'){ dontShowFor(180); } // ~6 mesi
+            else { dontShowFor(14); }
+          });
+        }else{
+          // fallback: show instructions like iOS
+          hideToast();
+          dontShowFor(7);
+        }
+      });
+    }
+    if(elLater){ elLater.addEventListener('click', function(){ hideToast(); dontShowFor(2); }); }
+    if(elHide){ elHide.addEventListener('click', function(){ hideToast(); dontShowFor(30); }); }
+    if(elOk){ elOk.addEventListener('click', function(){ hideToast(); dontShowFor(7); }); }
+
+    return host;
+  }
+
+  function showToast(){
+    if(shown) return;
+    if(!shouldShow()) return;
+    var el = buildToast();
+    requestAnimationFrame(function(){
+      el.classList.add('show');
+      shown = true;
+    });
+  }
+  function hideToast(){
+    var el = document.getElementById('installToast');
+    if(el){
+      el.classList.remove('show');
+      setTimeout(function(){ if(el && el.parentNode) el.parentNode.removeChild(el); }, 250);
+    }
+    shown = false;
+  }
+
+  // Android/Chrome: capture beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', function(e){
+    // Prevent mini-infobar
+    e.preventDefault();
+    promptEvent = e;
+    // show toast after a small delay or after user engagement
+    setTimeout(showToast, 2500);
+  });
+
+  // iOS Safari: no beforeinstallprompt → show instructions if not installed
+  if(isIOS && !isStandalone){
+    // Delay to avoid being intrusive
+    window.addEventListener('load', function(){ setTimeout(showToast, 3000); });
+  }
+
+  // If the app gets installed, hide and stop bothering
+  window.addEventListener('appinstalled', function(){ hideToast(); dontShowFor(365); });
+  // Also react to display-mode changes
+  if(window.matchMedia){
+    try{
+      var mm = window.matchMedia('(display-mode: standalone)');
+      mm.addEventListener && mm.addEventListener('change', function(ev){ if(ev.matches){ hideToast(); dontShowFor(365); } });
+    }catch(e){}
+  }
+})();
