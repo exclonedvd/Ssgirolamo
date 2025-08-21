@@ -1444,8 +1444,10 @@ function injectWhatsAppButton(){
 /* === Install App Toast (Android + iOS) === */
 (function(){
   var ua = (navigator.userAgent || '').toLowerCase();
-  var isIOS = /iphone|ipad|ipod/.test(ua) && !/crios|fxios|edgios/.test(ua);
+  // Detect iOS family broadly (Safari, Chrome iOS, Firefox iOS, Edge iOS) and iPadOS that reports as Macintosh
+  var isIOS = /iphone|ipad|ipod/.test(ua) || ((/macintosh|mac os x/).test(ua) && 'ontouchend' in document);
   var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+ = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
   var storageKey = 'installToast.dismissed.until';
   var promptEvent = null;
   var shown = false;
@@ -1569,4 +1571,8 @@ function injectWhatsAppButton(){
       mm.addEventListener && mm.addEventListener('change', function(ev){ if(ev.matches){ hideToast(); dontShowFor(365); } });
     }catch(e){}
   }
+
+// Manual controls for debugging or user-triggered prompt
+window.showInstallToast = window.showInstallToast || (function(){ try{ var evt = new Event('forceShowToast'); window.dispatchEvent(evt); }catch(e){} });
+window.resetInstallToast = window.resetInstallToast || (function(){ try{ localStorage.removeItem('installToast.dismissed.until'); console.log('[install-toast] reset'); }catch(e){} });
 })();
