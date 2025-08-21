@@ -81,7 +81,7 @@
 <main id="main">
 <section class="container" id="camere">
 <div class="title-row"><h2 class="section-title" data-emoji="rooms" data-i18n="camere_title">Camere</h2><button aria-controls="bookingOverlay" aria-haspopup="dialog" aria-label="Apri prenotazione" class="btn btn-solid" id="openBooking">
-  Prenota
+  Richiedi disponibilità
 </button></div>
 <div class="card">
 <p data-i18n="camere_text">Camere accoglienti in stile rurale mantovano, ognuna con bagno privato, aria condizionata e Wi‑Fi. Disponibili soluzioni per famiglie e ospiti business.</p>
@@ -134,8 +134,7 @@
 </div>
 </div>
 <div class="container" style="margin-top:16px">
-<div class="card">
-<h3 style="margin-top:0"><span>Scopri Mantova</span></h3>
+<div class="card" id="scopri-mantova"><h3><span>Scopri Mantova</span> <span aria-hidden="true" class="nav-emoji">📍</span></h3>
 <p class="muted">Ristoranti consigliati e attività da non perdere, tutto in un unico posto.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a class="btn" href="#" id="doOpen">Cosa fare</a>
@@ -234,7 +233,7 @@
   #planner .chip span{ padding:7px 9px; font-size:.95rem; }
 }
 </style>
-<form class="planner-form card" id="plannerForm" novalidate=""><div class="planner-header"><h3>Itinerario su misura</h3><p class="muted">Itinerario su misura (meteo, interessi, ristoranti).</p></div>
+<form class="planner-form card" id="plannerForm" novalidate=""><div class="planner-header"><h3>Itinerario su misura <span aria-hidden="true" class="nav-emoji">🧭</span></h3><p class="muted">Itinerario su misura (meteo, interessi, ristoranti).</p></div>
 <div class="form-grid">
 <label class="field">
 <span class="label" data-i18n="planner_name">Nome</span>

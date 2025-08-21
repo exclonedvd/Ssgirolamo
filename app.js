@@ -208,6 +208,7 @@ const I18N = {
   function buildMini(id, list){
     const box = document.getElementById(id);
     if(!box) return;
+    const isClickable = (box.dataset && (box.dataset.clickable === '1' || box.getAttribute('data-clickable') === '1'));
     list.slice(0,4).forEach((src)=>{
       const ext = src.split('.').pop();
       const baseNoExt = src.slice(0, -(ext.length+1));
@@ -218,25 +219,33 @@ const I18N = {
       img.srcset = baseNoExt + '-480.jpg 480w, ' + baseNoExt + '-800.jpg 800w, ' + src + ' 1280w';
       img.sizes = '(max-width: 600px) 40vw, 120px';
       img.alt = '';
-      img.addEventListener('click', ()=>{
-        // Try to open the main lightbox at the matching index inside #gallery
-        const big = src;
-        const galleryImages = Array.from(document.querySelectorAll('#gallery img'));
-        let index = galleryImages.findIndex(g => (g.currentSrc && g.currentSrc.endsWith(big)) || (g.src && g.src.endsWith(big)));
-        if(index >= 0 && typeof window.openLightbox === 'function'){
-          window.openLightbox(index);
-        }else{
-          // Fallback: open lightbox with this image only
-          const lb = document.getElementById('lightbox');
-          const lbImg = document.getElementById('lbImg');
-          if(lb && lbImg){
-            lbImg.src = src;
-            lb.classList.add('open');
-            lb.setAttribute('aria-hidden', 'false');
+      if(isClickable){
+        img.addEventListener('click', ()=>{
+          // Try to open the main lightbox at the matching index inside #gallery
+          const big = src;
+          const galleryImages = Array.from(document.querySelectorAll('#gallery img'));
+          let index = galleryImages.findIndex(g => (g.currentSrc && g.currentSrc.endsWith(big)) || (g.src && g.src.endsWith(big)));
+          if(index >= 0 && typeof window.openLightbox === 'function'){
+            window.openLightbox(index);
+          }else if(window.CSGallery && typeof window.CSGallery.open === 'function'){
+            window.CSGallery.open(index >= 0 ? index : 0);
+          }else{
+            const lb = document.getElementById('lightbox');
+            const lbImg = document.getElementById('lbImg');
+            if(lb && lbImg){
+              lbImg.src = src;
+              lb.classList.add('open');
+              lb.setAttribute('aria-hidden', 'false');
+            }
           }
-        }
-      });
-      box.appendChild(img);
+        });
+      }else{
+        img.setAttribute('aria-disabled','true');
+        img.setAttribute('tabindex','-1');
+        img.draggable = false;
+        img.style.cursor = 'default';
+      }
+    box.appendChild(img);
     });
   }
 
@@ -938,39 +947,88 @@ function injectWhatsAppButton(){
 
 
 
+
 // --- Booking overlay logic ---
 (function(){
   const body = document.body;
+
   function open(id){
     const el = document.getElementById(id);
     if(!el) return;
+
+    // Show and lock scroll
     el.setAttribute('aria-hidden','false');
     body.dataset.lockScroll = '1';
     body.style.overflow='hidden';
-    const closeBtn = el.querySelector('.overlay-close');
-    if(closeBtn) closeBtn.focus({preventScroll:true});
+
+    // Focus trap
+    const focusable = el.querySelectorAll('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0] || el;
+    const last  = focusable[focusable.length-1] || el;
+    if(el._trapHandler){ el.removeEventListener('keydown', el._trapHandler); }
+    el._trapHandler = function(ev){
+      if(ev.key === 'Tab'){
+        if(ev.shiftKey && document.activeElement === first){ ev.preventDefault(); last.focus(); }
+        else if(!ev.shiftKey && document.activeElement === last){ ev.preventDefault(); first.focus(); }
+      } else if (ev.key === 'Escape'){
+        close(id);
+      }
+    };
+    el.addEventListener('keydown', el._trapHandler);
+    setTimeout(()=>{ if(first && first.focus) first.focus({preventScroll:true}); }, 0);
   }
+
   function close(id){
     const el = document.getElementById(id);
     if(!el) return;
     el.setAttribute('aria-hidden','true');
+    if(el._trapHandler){ el.removeEventListener('keydown', el._trapHandler); el._trapHandler = null; }
     body.style.overflow='';
     delete body.dataset.lockScroll;
   }
+
+  // Delegated clicks
   document.addEventListener('click', (e)=>{
     const t = e.target;
-    if(t.closest('#openBooking')){ open('bookingOverlay'); }
-    if(t.hasAttribute('data-close')){ close(t.getAttribute('data-close')); }
-    if(t.closest('#openBookingForm')){ e.preventDefault(); close('bookingOverlay'); open('bookingFormOverlay'); }
+
+    // Openers
+    if(t.closest('#openBooking')){ e.preventDefault(); open('bookingOverlay'); return; }
+    if(t.closest('#openBookingForm')){ e.preventDefault(); close('bookingOverlay'); open('bookingFormOverlay'); return; }
+
+    // Close buttons inside overlays
+    if(t.closest('.overlay-close')){
+      const ov = t.closest('.overlay');
+      if(ov && ov.id) close(ov.id);
+      return;
+    }
+
+    // NEW: open booking overlay from any nav link targeting "#book…"
+    const anchor = t.closest('a');
+    if (anchor) {
+      const href = (anchor.getAttribute('href') || '').trim();
+      const dataEmoji = anchor.getAttribute('data-emoji') || '';
+      const dataI18n = anchor.getAttribute('data-i18n') || '';
+      // If it's the "Richiesta disponibilità" nav item (various selectors) open the overlay
+      if (href.startsWith('#book') || dataEmoji === 'request' || dataI18n === 'nav_prenotazioni') {
+        e.preventDefault();
+        open('bookingOverlay');
+        return;
+      }
+    }
   }, false);
 
-  // WhatsApp link & phone number: customize here
-  const phoneE164 = '+393478008505';
-  const localPhone = '3478008505'; // TODO: sostituisci con numero reale
-  const waMsg = encodeURIComponent('Ciao! Vorrei chiedere informazioni/disponibilità.');
-  const wa = document.getElementById('bookingWhatsapp');
-  if(wa){ wa.href = `https://wa.me/${phoneE164.replace('+','')}/?text=${waMsg}`; }
-  const tel = document.getElementById('bookingCall'); if(tel){ tel.href = `tel:${localPhone}`; }
+  // WhatsApp link & phone number: customize here if necessario
+  const wa = document.getElementById('bookingWhatsApp');
+  const tel = document.getElementById('bookingCall');
+  const phoneE164 = '+393478008505'; // TODO: aggiorna
+  const localPhone = '3478008505';   // TODO: aggiorna
+  if(wa){
+    let waMsg = encodeURIComponent('Ciao! Vorrei informazioni/disponibilità.');
+    wa.href = `https://wa.me/${phoneE164.replace(/\D/g,'')}?text=${waMsg}`;
+  }
+  if(tel){
+    tel.href = `tel:${localPhone}`;
+  }
 
   // Minimal submit handler
   const form = document.getElementById('bookingForm');
@@ -990,6 +1048,7 @@ function injectWhatsAppButton(){
 
 
 
+
 /* discover navigation and tabs */
 (function(){
   function selectTab(which){
@@ -1006,8 +1065,7 @@ function injectWhatsAppButton(){
     c.onclick = ()=>{ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); document.body.style.overflow=''; };
     ov.addEventListener('click',(e)=>{ if(e.target===ov) c.click(); });
   }
-  const nav = document.getElementById('navDiscover');
-  if(nav){ nav.addEventListener('click', (e)=>{ e.preventDefault(); selectTab('eat'); openEatList(); ensureOpen(); }); }
+  const nav = document.getElementById('navDiscover'); // default anchor behavior (smooth scroll)); }
   const d1 = document.getElementById('discoverOpen');
   if(d1){ d1.addEventListener('click', (e)=>{ e.preventDefault(); selectTab('eat'); openEatList(); ensureOpen(); }); }
   const d2 = document.getElementById('discoverOpenDo');

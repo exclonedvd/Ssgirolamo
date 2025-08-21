@@ -157,3 +157,11 @@ h2 + #openBooking, h3 + #openBooking{margin-left:10px;vertical-align:middle}
 /* === Drawer nav emoji (no tint) === */
 .drawer nav a .nav-emoji{ display:inline-block; width:1.25em; text-align:center; }
 .drawer nav a{ display:flex; align-items:center; gap:.5rem; }
+
+/* Mini-gallery: non cliccabile di default */
+.mini-gallery img { pointer-events: none; cursor: default; }
+/* Riattiva clic se esplicitamente richiesto */
+.mini-gallery[data-clickable="1"] img { pointer-events: auto; cursor: pointer; }
+
+.card h3 .nav-emoji{ margin-left:.2em; }
+html{ scroll-behavior:smooth; }
