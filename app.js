@@ -1272,3 +1272,162 @@ function injectWhatsAppButton(){
   window.addEventListener('resize', update, {passive:true});
   setTimeout(update, 0);
 })();
+
+// === Flash group wrappers for sections (so the highlight matches the card block under the title) ===
+(function(){
+  function ensureFlashGroup_Colazioni(){
+    const sec = document.getElementById('colazioni');
+    if(!sec) return;
+    if(sec.querySelector(':scope > .flash-group')) return;
+    const grid = Array.from(sec.children).find(el => el.classList && el.classList.contains('grid'));
+    if(!grid) return;
+    const group = document.createElement('div');
+    group.className = 'flash-group';
+    sec.insertBefore(group, grid);
+    group.appendChild(grid);
+  }
+  function ensureFlashGroup_Esperienze(){
+    const sec = document.getElementById('esperienze');
+    if(!sec) return;
+    if(sec.querySelector(':scope > .flash-group')) return;
+    const children = Array.from(sec.children).filter(el => !(el.tagName && el.tagName.toUpperCase()==='H2'));
+    if(!children.length) return;
+    const group = document.createElement('div');
+    group.className = 'flash-group';
+    sec.insertBefore(group, children[0]);
+    children.forEach(ch => group.appendChild(ch));
+  }
+  window.addEventListener('DOMContentLoaded', ()=>{
+    ensureFlashGroup_Colazioni();
+    ensureFlashGroup_Esperienze();
+  });
+  window.addEventListener('load', ()=>{
+    ensureFlashGroup_Colazioni();
+    ensureFlashGroup_Esperienze();
+  });
+})();
+
+// Re-apply flash immediately and after scroll settle
+(function(){
+  function flashTarget(id){
+    if(!id) return;
+    const sec = document.getElementById(id);
+    if(!sec) return;
+    const group = sec.querySelector(':scope > .flash-group');
+    const grid  = sec.querySelector(':scope > .grid');
+    const target = group || grid || sec.querySelector('.card') || sec;
+    // restart both class-based and CSS-only ring
+    target.classList.remove('flash-highlight');
+    void target.offsetWidth;
+    target.classList.add('flash-highlight');
+    // repeat once more a bit later to catch smooth-scroll end
+    setTimeout(()=>{
+      target.classList.remove('flash-highlight');
+      void target.offsetWidth;
+      target.classList.add('flash-highlight');
+    }, 400);
+  }
+  // Make globally available (overwrite if exists)
+  window.flashTarget = flashTarget;
+  // Hook nav anchors
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', ()=>{
+        const id = a.getAttribute('href').replace(/^#/, '');
+        // fire soon and later
+        flashTarget(id);
+        setTimeout(()=>flashTarget(id), 350);
+      });
+    });
+    // initial hash
+    if(location.hash){
+      const id = location.hash.replace(/^#/, '');
+      setTimeout(()=>flashTarget(id), 450);
+    }
+  });
+  window.addEventListener('hashchange', ()=>{
+    const id = (location.hash||'').replace(/^#/,'');
+    flashTarget(id);
+  });
+})();
+
+// === Soft reveal on scroll (IntersectionObserver) ===
+(function(){
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.12 });
+    function prepReveals(){
+      // Section titles and cards
+      document.querySelectorAll('.section-title, .container .card').forEach(el=>{
+        if(!el.classList.contains('reveal')) el.classList.add('reveal');
+        io.observe(el);
+      });
+      // Stagger grid children a bit
+      document.querySelectorAll('.container .grid').forEach(grid=>{
+        const kids = Array.from(grid.children);
+        kids.forEach((el,i)=>{
+          if(el.classList && !el.classList.contains('reveal')){
+            el.classList.add('reveal');
+            el.style.transitionDelay = Math.min(i*70, 420) + 'ms';
+            io.observe(el);
+          }
+        });
+      });
+    }
+    window.addEventListener('DOMContentLoaded', prepReveals);
+    window.addEventListener('load', prepReveals);
+  }
+})();
+
+// === Hero parallax (soft) ===
+(function(){
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hero = document.querySelector('header.hero');
+  if(!hero || reduce) return;
+  hero.dataset.parallax = 'soft';
+  let ticking = false;
+  function onScroll(){
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      const rect = hero.getBoundingClientRect();
+      // Move background slightly opposite to scroll for parallax illusion
+      const y = Math.max(-20, Math.min(20, -rect.top * 0.06)); // clamp to [-20, 20] px
+      hero.style.setProperty('--parallax-y', y.toFixed(2) + 'px');
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  window.addEventListener('load', onScroll);
+  onScroll();
+})();
+
+// === Emoji micro-bounce when section title is revealed ===
+(function(){
+  if(!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const title = entry.target;
+        // Find emoji span candidates inside the title
+        const emoji = title.querySelector('.nav-emoji, .emoji, [class*="emoji"]') || null;
+        if(emoji && !emoji.classList.contains('emoji-bounce')){
+          emoji.classList.add('emoji-bounce');
+        }
+        io.unobserve(title);
+      }
+    });
+  }, { threshold: 0.25 });
+  function prep(){
+    document.querySelectorAll('.section-title').forEach(t=> io.observe(t));
+  }
+  window.addEventListener('DOMContentLoaded', prep);
+  window.addEventListener('load', prep);
+})();

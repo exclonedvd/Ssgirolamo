@@ -165,3 +165,99 @@ h2 + #openBooking, h3 + #openBooking{margin-left:10px;vertical-align:middle}
 
 .card h3 .nav-emoji{ margin-left:.2em; }
 html{ scroll-behavior:smooth; }
+
+/* === Anchor target flash (focus highlight) === */
+@keyframes cs_flash_border { 0% { box-shadow: 0 0 0 0 rgba(38,140,70, .65); } 60% { box-shadow: 0 0 0 12px rgba(38,140,70, .18); } 100% { box-shadow: 0 0 0 0 rgba(38,140,70, 0); } }
+  60% { box-shadow: 0 0 0 8px rgba(38,140,70, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(38,140,70, 0); }
+}
+.flash-highlight {
+  animation: cs_flash_border 900ms ease-out;
+  will-change: box-shadow;
+}
+
+/* container used only for highlight grouping (no visual change) */
+.flash-group{ border-radius: 16px; }
+
+/* === CSS-only fallback: highlight the main block when the section is :target === */
+#colazioni:target > .flash-group,
+#esperienze:target > .flash-group,
+#colazioni:target > .grid,
+#esperienze:target > .grid {
+  animation: cs_flash_border 1000ms ease-out;
+}
+
+/* === Strong highlight ring (pseudo-element) === */
+.flash-highlight{ position: relative; }
+.flash-highlight::after{
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  pointer-events: none;
+  /* dual ring: inner solid + outer soft */
+  box-shadow: 0 0 0 3px var(--brand) inset, 0 0 0 14px rgba(38,140,70,.18);
+  opacity: 0;
+  animation: cs_flash_ring 1100ms ease-out;
+}
+@keyframes cs_flash_ring {
+  0% { opacity: 1; transform: scale(.98); }
+  55% { opacity: .9; transform: scale(1); }
+  100% { opacity: 0; }
+}
+
+/* make potential targets positioning-ready for the ring in CSS-only mode */
+#colazioni > .flash-group, #colazioni > .grid,
+#esperienze > .flash-group, #esperienze > .grid { position: relative; }
+
+/* CSS-only fallback: trigger the ring when reaching the section via anchor */
+#colazioni:target > .flash-group::after,
+#colazioni:target > .grid::after,
+#esperienze:target > .flash-group::after,
+#esperienze:target > .grid::after { 
+  animation: cs_flash_ring 1100ms ease-out;
+}
+
+/* === Soft motion (respect accessibility) === */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+/* Cards: subtle lift */
+.card{ transition: transform .18s ease, box-shadow .18s ease; will-change: transform; }
+.card:hover{ transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.08); }
+.card:active{ transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+
+/* Buttons: gentle hover/active */
+.btn{ transition: transform .14s ease, box-shadow .20s ease, background-color .20s ease; }
+.btn:hover{ transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+.btn:active{ transform: translateY(0); box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+
+/* Focus-visible ring (keyboard) */
+a:focus-visible, .btn:focus-visible, .card:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand); border-radius: 12px; }
+
+/* On-scroll reveal */
+.reveal{ opacity: 0; transform: translateY(10px); }
+.reveal.is-visible{ opacity: 1; transform: translateY(0); transition: opacity .5s ease, transform .5s ease; }
+
+/* Gallery: a touch of hover zoom (not on mini-galleries) */
+.gallery.carousel img{ transition: transform .30s ease; transform-origin: center; }
+.gallery.carousel img:hover{ transform: scale(1.015); }
+
+/* === Hero parallax (soft) === */
+header.hero{ will-change: background-position; background-position: center calc(50% + var(--parallax-y, 0px)); background-size: cover; }
+@media (prefers-reduced-motion: reduce){
+  header.hero{ background-position: center center !important; }
+}
+
+/* Emoji micro-bounce */
+.section-title .emoji-bounce, .section-title .nav-emoji.emoji-bounce{
+  display: inline-block;
+  animation: emoji_pop 600ms cubic-bezier(.2,.8,.2,1);
+  transform-origin: center;
+}
+@keyframes emoji_pop {
+  0%   { transform: translateY(2px) scale(.92) rotate(-1deg); opacity:.9; }
+  55%  { transform: translateY(-1px) scale(1.06) rotate(0deg); opacity:1; }
+  100% { transform: translateY(0) scale(1); }
+}
